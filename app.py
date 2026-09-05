@@ -181,3 +181,37 @@ def get_history():
     for k, v in list(HISTORY.items())[-10:]:
         out[k] = v[-6:]
     return out
+
+# ---- المصمم البصري مثل n8n (مجاني) ----
+WF_PATH = Path(__file__).parent / "workflow.json"
+
+@app.get("/workflow", response_class=HTMLResponse)
+def workflow_page():
+    p = Path(__file__).parent / "workflow.html"
+    return p.read_text(encoding="utf-8") if p.exists() else "<h3>workflow.html ناقص — ارفعه لـ GitHub</h3>"
+
+@app.get("/api/workflow")
+def get_workflow():
+    if WF_PATH.exists():
+        try:
+            return json.loads(WF_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {"draw": None, "prompt": "", "model": "llama-3.3-70b-versatile", "biz": ""}
+
+@app.post("/api/workflow")
+async def set_workflow(req: Request):
+    try:
+        body = await req.json()
+        WF_PATH.write_text(json.dumps(body, ensure_ascii=False)[:200000], encoding="utf-8")
+        # طبّق الإعدادات فورا على الوكيل بدون إعادة نشر
+        import agent_core as ac
+        if body.get("model"):
+            os.environ["OPENAI_MODEL"] = body["model"]
+        if body.get("biz"):
+            os.environ["BUSINESS_NAME"] = body["biz"]
+        if body.get("prompt"):
+            ac.SYSTEM_PROMPT = body["prompt"] + "\n\n(إعدادات من المصمم البصري)"
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}

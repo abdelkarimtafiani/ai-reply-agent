@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مصمم الوكيل البصري 🔗 مثل n8n - مجاني</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.css">
+<style>
+body{margin:0;font-family:Segoe UI,Tahoma;background:#1a1d23;color:#eee}
+header{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#111318;border-bottom:1px solid #333}
+header b{font-size:16px}button{background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+button.ghost{background:#2a2e37}.small{font-size:12px;color:#999}
+#wrap{display:flex;height:calc(100vh - 52px)}
+#palette{width:210px;background:#111318;border-left:1px solid #333;padding:10px;overflow:auto}
+.node-btn{background:#22262f;border:1px solid #3a3f4d;border-radius:10px;padding:9px;margin-bottom:8px;cursor:grab;font-size:13px}
+.node-btn:hover{border-color:#7c3aed}
+#editor{flex:1;position:relative}
+.drawflow{background:#1a1d23!important;background-image:radial-gradient(#333 1px,transparent 1px)!important;background-size:22px 22px!important}
+.drawflow-node{background:#22262f!important;color:#eee!important;border:1px solid #4b5162!important;border-radius:12px!important;width:210px!important}
+.drawflow-node.selected{border-color:#7c3aed!important;box-shadow:0 0 0 2px #7c3aed55}
+.drawflow-node .title{font-weight:bold;font-size:13px;padding:8px 10px;border-bottom:1px solid #3a3f4d}
+.drawflow-node .body{padding:8px 10px;font-size:12px;color:#bbb}
+.drawflow-node.TelegramTrigger{border-color:#229ED9!important}
+.drawflow-node.AIAgent{border-color:#22c55e!important;width:240px!important}
+.inouts input,.inouts output{margin:2px}
+#panel{width:260px;background:#111318;border-right:1px solid #333;padding:12px;overflow:auto}
+#panel input,#panel textarea,#panel select{width:100%;background:#22262f;border:1px solid #3a3f4d;color:#eee;border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box}
+</style>
+</head>
+<body>
+<header>
+<b>🔗 مصمم الوكيل البصري (مثل n8n — مجاني)</b>
+<span class="small" id="msg">اسحب من اليسار واربط بالنقر على النقاط</span>
+<span style="flex:1"></span>
+<button class="ghost" onclick="location.href='/dashboard'">⬅ اللوحة</button>
+<button onclick="save()">💾 حفظ وتشغيل</button>
+<button onclick="testFlow()">⚡ جرّب</button>
+</header>
+<div id="wrap">
+<div id="palette">
+<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramTrigger')">📩 Telegram Trigger<br><span class="small">استقبال رسالة</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'FacebookTrigger')">📘 Facebook Trigger<br><span class="small">رسائل + تعليقات</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'AIAgent')">🤖 AI Agent<br><span class="small">الدماغ (Groq)</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'GroqModel')">🧠 Groq Model<br><span class="small">llama-3.3-70b</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Memory')">💾 Memory<br><span class="small">يتذكر المحادثة</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Calculator')">🔢 Calculator<br><span class="small">أداة حساب</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Wikipedia')">📚 Wikipedia<br><span class="small">أداة بحث</span></div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramSend')">📤 Telegram Send<br><span class="small">إرسال الرد</span></div>
+</div>
+<div id="editor" ondragover="event.preventDefault()" ondrop="drop(event)"><div id="draw"></div></div>
+<div id="panel">
+<b>⚙️ إعدادات العقدة</b>
+<div class="small">اضغط على أي عقدة لتعديلها</div>
+<div style="height:8px"></div>
+<label class="small">System Prompt (شخصية الوكيل)</label>
+<textarea id="cfg_prompt" rows="6"></textarea>
+<label class="small">Model</label>
+<select id="cfg_model"><option>llama-3.3-70b-versatile</option><option>llama-3.1-8b-instant</option><option>mixtral-8x7b-32768</option></select>
+<label class="small">اسم المتجر</label>
+<input id="cfg_biz">
+<button onclick="applyCfg()">تطبيق على العقدة ✅</button>
+<div class="small" id="testOut" style="margin-top:10px;white-space:pre-wrap"></div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.js"></script>
+<script>
+const el = document.getElementById('draw');
+const editor = new Drawflow(el);
+editor.reroute = true;
+editor.start();
+let dragType = null;
+function drag(ev, t){ dragType = t; }
+el.parentElement.addEventListener('drop', drop);
+function drop(ev){
+  ev.preventDefault();
+  if(!dragType) return;
+  const rect = el.getBoundingClientRect();
+  const x = (ev.clientX - rect.left), y = (ev.clientY - rect.top);
+  addNode(dragType, x, y);
+  dragType = null;
+}
+function addNode(type, x, y){
+  const defs = {
+    TelegramTrigger:{t:'📩 Telegram Trigger',b:'عند وصول رسالة',ins:0,outs:1},
+    FacebookTrigger:{t:'📘 Facebook Trigger',b:'رسائل + تعليقات',ins:0,outs:1},
+    AIAgent:{t:'🤖 AI Agent',b:'الدماغ — اضغط للإعداد',ins:1,outs:1},
+    GroqModel:{t:'🧠 Groq Model',b:'llama-3.3-70b',ins:0,outs:1},
+    Memory:{t:'💾 Memory',b:'ذاكرة 10 رسائل',ins:0,outs:1},
+    Calculator:{t:'🔢 Calculator',b:'أداة حساب',ins:0,outs:1},
+    Wikipedia:{t:'📚 Wikipedia',b:'أداة بحث',ins:0,outs:1},
+    TelegramSend:{t:'📤 Telegram Send',b:'إرسال الرد',ins:1,outs:0},
+  };
+  const d = defs[type]||defs.AIAgent;
+  editor.addNode(type, d.ins, d.outs, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, `<div class="title">${d.t}</div><div class="body">${d.b}</div>`);
+}
+let selId = null;
+editor.on('nodeSelected', id=>{ selId=id; const n=editor.getNodeFromId(id); document.getElementById('cfg_prompt').value=n.data.prompt||''; document.getElementById('cfg_model').value=n.data.model||'llama-3.3-70b-versatile'; });
+function applyCfg(){
+  if(!selId) return alert('اضغط على عقدة AI Agent أولا');
+  const n=editor.getNodeFromId(selId);
+  n.data.prompt=document.getElementById('cfg_prompt').value;
+  n.data.model=document.getElementById('cfg_model').value;
+  n.data.biz=document.getElementById('cfg_biz').value;
+  editor.updateNodeDataFromId(selId,n.data);
+  document.getElementById('msg').textContent='✅ تحفظ في العقدة';
+}
+// قالب افتراضي مثل صورتك
+function defaultFlow(){
+  if(Object.keys(editor.drawflow.drawflow.Home.data).length) return;
+  addNode('TelegramTrigger',80,120); addNode('AIAgent',340,120);
+  addNode('GroqModel',200,330); addNode('Memory',420,330);
+  addNode('Calculator',620,330); addNode('Wikipedia',820,330);
+  addNode('TelegramSend',640,120);
+}
+async function save(){
+  const data = editor.export();
+  // اجمع إعدادات AI Agent الأولى
+  const nodes = Object.values(data.drawflow.Home.data);
+  const ai = nodes.find(n=>n.name==='AIAgent');
+  const payload = {draw:data, prompt:(ai&&ai.data.prompt)||'', model:(ai&&ai.data.model)||'llama-3.3-70b-versatile', biz:document.getElementById('cfg_biz').value||''};
+  const r = await fetch('/api/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+  document.getElementById('msg').textContent = r.ok ? '✅ تحفظ ويشتغل الآن' : '❌ خطأ: '+(r.error||'');
+}
+async function load(){
+  try{
+    const r = await fetch('/api/workflow').then(r=>r.json());
+    if(r && r.draw){ editor.import(r.draw); if(r.prompt) document.getElementById('cfg_prompt').value=r.prompt; if(r.model) document.getElementById('cfg_model').value=r.model; if(r.biz) document.getElementById('cfg_biz').value=r.biz; return; }
+  }catch(e){}
+  defaultFlow();
+}
+async function testFlow(){
+  const q = prompt('اكتب رسالة زبون للتجربة:','شحال السعر؟')||'شحال السعر؟';
+  const r = await fetch('/test?q='+encodeURIComponent(q)).then(r=>r.json());
+  document.getElementById('testOut').textContent = '🤖 '+r.reply;
+}
+load();
+fetch('/api/knowledge').then(r=>r.json()).then(k=>{ if(k&&k.business_name) document.getElementById('cfg_biz').value=k.business_name; }).catch(()=>{});
+</script>
+</body>
+</html>
