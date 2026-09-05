@@ -1,8 +1,10 @@
 """سيرفر موحد: Facebook + Instagram + Messenger + WhatsApp + TikTok -> دماغ AI واحد."""
 import os
+import json
 import requests
+from pathlib import Path
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import PlainTextResponse, JSONResponse, HTMLResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -135,3 +137,47 @@ async def receive_tiktok(req: Request):
 @app.get("/test")
 def quick_test(q: str = "شحال السعر؟", kind: str = "message"):
     return generate_reply(q, kind=kind)
+
+# ---- لوحة تحكم بسيطة لغير المبرمجين ----
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    p = Path(__file__).parent / "dashboard.html"
+    return p.read_text(encoding="utf-8") if p.exists() else "<h3>dashboard.html ناقص</h3>"
+
+@app.get("/api/knowledge")
+def get_knowledge():
+    p = Path(__file__).parent / "knowledge.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/knowledge")
+async def set_knowledge(req: Request):
+    p = Path(__file__).parent / "knowledge.json"
+    try:
+        body = await req.json()
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if body.get("business_name"):
+            data["business_name"] = body["business_name"]
+            os.environ["BUSINESS_NAME"] = body["business_name"]
+        if body.get("price") and data.get("products"):
+            data["products"][0]["price"] = body["price"]
+        if body.get("faq_text"):
+            data["faq"] = [{"q": "معلومات عامة", "a": body["faq_text"]}]
+        p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        # تحديث الذاكرة الحية
+        from agent_core import load_knowledge
+        import agent_core as ac
+        ac.KNOW = load_knowledge()
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/api/history")
+def get_history():
+    # آخر 10 محادثات فقط + إخفاء الأرقام الطويلة للخصوصية
+    out = {}
+    for k, v in list(HISTORY.items())[-10:]:
+        out[k] = v[-6:]
+    return out

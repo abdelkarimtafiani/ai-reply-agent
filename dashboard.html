@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة تحكم AI Agent 🤖</title>
+<style>
+body{font-family:Segoe UI,Tahoma,Arial;background:#f3f4f6;margin:0;padding:16px;color:#111}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+h1{font-size:20px;margin:0 0 8px}h2{font-size:16px;margin:0 0 10px}
+input,textarea,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:15px;box-sizing:border-box}
+button{background:#111;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-size:15px;cursor:pointer}
+button.green{background:#16a34a}button:disabled{opacity:.5}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:13px;background:#dcfce7;color:#166534}
+.badge.rule{background:#fef3c7;color:#92400e}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.msg{background:#f9fafb;border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}
+.small{font-size:12px;color:#666}
+#reply{background:#ecfdf5;border:1px solid #bbf7d0;border-radius:10px;padding:10px;margin-top:8px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>🤖 لوحة تحكم الوكيل الذكي</h1>
+<div class="small" id="url"></div>
+
+<div class="card">
+<h2>الحالة</h2>
+<div id="status">جاري الفحص...</div>
+<div class="small" style="margin-top:8px">روابط Webhook للنسخ في Meta:</div>
+<div class="msg" id="hooks"></div>
+</div>
+
+<div class="card">
+<h2>💬 جرّب الرد</h2>
+<div class="row">
+<select id="kind"><option value="message">رسالة خاصة</option><option value="comment">تعليق عام</option></select>
+<select id="lang"><option>دارجة جزائرية</option><option>فصحى</option><option>فرنسية</option><option>إنجليزية</option></select>
+</div>
+<div style="height:8px"></div>
+<textarea id="q" rows="2">سلام شحال السعر والتوصيل لوهران؟</textarea>
+<div style="height:8px"></div>
+<button class="green" onclick="tryReply()">جرّب ⚡</button>
+<div id="reply"></div>
+</div>
+
+<div class="card">
+<h2>🏪 منتجك وأسعارك (بدون برمجة)</h2>
+<input id="biz" placeholder="اسم المتجر">
+<div style="height:8px"></div>
+<input id="price" placeholder="السعر مثلا 2900 دج">
+<div style="height:8px"></div>
+<textarea id="faq" rows="4" placeholder="معلومات التوصيل والدفع..."></textarea>
+<div style="height:8px"></div>
+<button onclick="saveK()">حفظ 💾</button> <span class="small" id="saveMsg"></span>
+</div>
+
+<div class="card">
+<h2>📨 آخر المحادثات</h2>
+<button onclick="loadH()">تحديث</button>
+<div id="hist"></div>
+</div>
+
+<script>
+const base = location.origin;
+document.getElementById('url').textContent = base;
+document.getElementById('hooks').innerHTML = base + '/webhook/meta<br>' + base + '/webhook/whatsapp';
+async function status(){
+  const r = await fetch(base + '/').then(r=>r.json());
+  document.getElementById('status').innerHTML = 'الحالة: ' + r.status + ' <span class="badge '+(r.mode.includes('ai')?'':'rule')+'">'+r.mode+'</span><br><span class="small">المنصات: '+r.platforms.join('، ')+'</span>';
+  const k = await fetch(base + '/api/knowledge').then(r=>r.json()).catch(()=>null);
+  if(k){ document.getElementById('biz').value = k.business_name||''; const p=(k.products||[])[0]||{}; document.getElementById('price').value=p.price||''; document.getElementById('faq').value=(k.faq||[]).map(x=>x.a).join('\n'); }
+}
+async function tryReply(){
+  const q=document.getElementById('q').value, kind=document.getElementById('kind').value;
+  document.getElementById('reply').textContent='⏳ يكتب...';
+  const r = await fetch(base+'/test?q='+encodeURIComponent(q)+'&kind='+kind).then(r=>r.json());
+  document.getElementById('reply').textContent='🤖 '+r.reply+'\n— ('+r.mode+')';
+}
+async function saveK(){
+  const body={business_name:document.getElementById('biz').value, price:document.getElementById('price').value, faq_text:document.getElementById('faq').value};
+  const r = await fetch(base+'/api/knowledge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+  document.getElementById('saveMsg').textContent = r.ok ? '✅ تحفظ' : '❌ خطأ';
+}
+async function loadH(){
+  const r = await fetch(base+'/api/history').then(r=>r.json());
+  document.getElementById('hist').innerHTML = Object.entries(r).slice(-10).map(([k,v])=>'<div class="msg"><b>'+k+'</b><br>'+v.slice(-4).map(m=>(m.role==='user'?'👤 ':'🤖 ')+m.content).join('<br>')+'</div>').join('') || '<span class="small">لا توجد محادثات بعد</span>';
+}
+status(); loadH();
+</script>
+</body>
+</html>
