@@ -13,7 +13,8 @@ button.ghost{background:#2a2e37}.small{font-size:12px;color:#999}
 #palette{width:210px;background:#111318;border-left:1px solid #333;padding:10px;overflow:auto}
 .node-btn{background:#22262f;border:1px solid #3a3f4d;border-radius:10px;padding:9px;margin-bottom:8px;cursor:grab;font-size:13px}
 .node-btn:hover{border-color:#7c3aed}
-#editor{flex:1;position:relative}
+#editor{flex:1;position:relative;overflow:hidden;min-height:400px}
+#draw{width:100%;height:100%;min-height:calc(100vh - 52px)}
 .drawflow{background:#1a1d23!important;background-image:radial-gradient(#333 1px,transparent 1px)!important;background-size:22px 22px!important}
 .drawflow-node{background:#22262f!important;color:#eee!important;border:1px solid #4b5162!important;border-radius:12px!important;width:210px!important}
 .drawflow-node.selected{border-color:#7c3aed!important;box-shadow:0 0 0 2px #7c3aed55}
@@ -105,11 +106,15 @@ function applyCfg(){
 }
 // قالب افتراضي مثل صورتك
 function defaultFlow(){
-  if(Object.keys(editor.drawflow.drawflow.Home.data).length) return;
-  addNode('TelegramTrigger',80,120); addNode('AIAgent',340,120);
-  addNode('GroqModel',200,330); addNode('Memory',420,330);
-  addNode('Calculator',620,330); addNode('Wikipedia',820,330);
-  addNode('TelegramSend',640,120);
+  try{
+    const home = editor.drawflow && editor.drawflow.drawflow && editor.drawflow.drawflow.Home;
+    if(home && Object.keys(home.data||{}).length) return;
+  }catch(e){}
+  addNode('TelegramTrigger',80,80); addNode('AIAgent',360,80);
+  addNode('GroqModel',120,320); addNode('Memory',360,320);
+  addNode('Calculator',600,320); addNode('Wikipedia',820,320);
+  addNode('TelegramSend',660,80);
+  try{ editor.zoom_refresh(); }catch(e){}
 }
 async function save(){
   const data = editor.export();
@@ -133,6 +138,7 @@ async function testFlow(){
   document.getElementById('testOut').textContent = '🤖 '+r.reply;
 }
 load();
+setTimeout(()=>{ try{ const home=editor.drawflow.drawflow.Home; if(!Object.keys(home.data||{}).length) defaultFlow(); editor.zoom_refresh(); }catch(e){} }, 600);
 fetch('/api/knowledge').then(r=>r.json()).then(k=>{ if(k&&k.business_name) document.getElementById('cfg_biz').value=k.business_name; }).catch(()=>{});
 </script>
 </body>
