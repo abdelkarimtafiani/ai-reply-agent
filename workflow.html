@@ -5,43 +5,81 @@
 <title>مصمم الوكيل البصري 🔗 مثل n8n - مجاني</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.css">
 <style>
-body{margin:0;font-family:Segoe UI,Tahoma;background:#1a1d23;color:#eee}
-header{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#111318;border-bottom:1px solid #333}
-header b{font-size:16px}button{background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
-button.ghost{background:#2a2e37}.small{font-size:12px;color:#999}
-#wrap{display:flex;height:calc(100vh - 52px)}
-#palette{width:150px;background:#111318;border-left:1px solid #333;padding:10px;overflow:auto}
-.node-btn{background:#22262f;border:1px solid #3a3f4d;border-radius:10px;padding:6px;margin-bottom:6px;cursor:grab;font-size:12px;text-align:center}
-.node-btn:hover{border-color:#7c3aed}
-.node-btn .ico{font-size:18px;display:block}
-#palette select{width:100%;background:#22262f;border:1px solid #3a3f4d;color:#eee;border-radius:8px;padding:8px;margin-bottom:8px}
-details.cat{margin-bottom:8px}
-details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
-#editor{flex:1;position:relative;overflow:hidden;min-height:400px}
-#draw{width:100%;height:100%;min-height:calc(100vh - 52px)}
-.drawflow{background:#1a1d23!important;background-image:radial-gradient(#333 1px,transparent 1px)!important;background-size:22px 22px!important}
-.drawflow-node{background:#22262f!important;color:#eee!important;border:1px solid #4b5162!important;border-radius:12px!important;width:210px!important}
-.drawflow-node.selected{border-color:#7c3aed!important;box-shadow:0 0 0 2px #7c3aed55}
-.drawflow-node .title{font-weight:bold;font-size:13px;padding:8px 10px;border-bottom:1px solid #3a3f4d}
-.drawflow-node .body{padding:8px 10px;font-size:12px;color:#bbb}
-.drawflow-node.TelegramTrigger{border-color:#229ED9!important}
-.drawflow-node.AIAgent{border-color:#22c55e!important;width:240px!important}
-.inouts input,.inouts output{margin:2px}
-#panel{width:260px;background:#111318;border-right:1px solid #333;padding:12px;overflow:auto}
-#panel input,#panel textarea,#panel select{width:100%;background:#22262f;border:1px solid #3a3f4d;color:#eee;border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box}
+:root{--bg:#101014;--panel:#17171c;--line:#2a2a33;--acc:#ea4b71}
+body{margin:0;font-family:Segoe UI,Tahoma;background:var(--bg);color:#eee;overflow:hidden}
+header{display:flex;gap:6px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);font-size:14px}
+header b{font-size:14px;white-space:nowrap}
+button{background:#3a3a46;color:#fff;border:1px solid #4a4a58;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button.primary{background:var(--acc);border-color:var(--acc)}
+button.ghost{background:transparent}
+.small{font-size:11px;color:#999}
+#zoomLbl{min-width:44px;text-align:center;font-size:12px;color:#bbb}
+#wrap{display:flex;height:calc(100vh - 47px)}
+#panel{width:230px;min-width:230px;background:var(--panel);border-left:1px solid var(--line);padding:10px;overflow:auto;transition:margin .2s}
+#palette{width:172px;min-width:172px;background:var(--panel);border-right:1px solid var(--line);padding:10px;overflow:auto;transition:margin .2s}
+#wrap.hideL #panel{margin-right:-250px}
+#wrap.hideR #palette{margin-left:-192px}
+#palette select{width:100%;background:#22222b;border:1px solid var(--line);color:#eee;border-radius:8px;padding:7px;margin-bottom:6px;font-size:12px}
+.node-btn{display:flex;align-items:center;gap:7px;background:#1e1e25;border:1px solid var(--line);border-radius:8px;padding:5px 7px;margin-bottom:5px;cursor:grab;font-size:11.5px}
+.node-btn:hover{border-color:var(--acc)}
+.node-btn .ico{width:26px;height:26px;min-width:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+details.cat{margin-bottom:6px}
+details.cat summary{cursor:pointer;font-size:12px;color:#bbb;padding:3px;list-style:none}
+details.cat summary::-webkit-details-marker{display:none}
+details.cat summary:before{content:'▾ '}
+#editor{flex:1;position:relative;overflow:hidden;min-width:0}
+#draw{width:100%;height:100%}
+.drawflow{background:var(--bg)!important;background-image:radial-gradient(#2e2e38 1.1px,transparent 1.1px)!important;background-size:24px 24px!important}
+.drawflow svg path{stroke:#8b8fa3!important;stroke-width:2!important}
+.drawflow-node{background:#1e1e25!important;border:1px solid #3a3a46!important;border-radius:10px!important;width:132px!important;padding:0!important;box-shadow:0 4px 14px rgba(0,0,0,.45)!important}
+.drawflow-node.selected{border-color:var(--acc)!important;box-shadow:0 0 0 2px #ea4b7155!important}
+.drawflow-node.AIAgent{width:196px!important}
+.n8n{position:relative;padding:10px 8px 8px;text-align:center}
+.n8n .ic{width:38px;height:38px;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;font-weight:bold}
+.n8n .lb{font-size:11.5px;font-weight:600;line-height:1.35}
+.n8n .lb span{display:block;font-weight:400;font-size:10.5px;color:#a7a7b3}
+.n8n .trig{position:absolute;top:-7px;right:-7px;background:#ff6d5a;border-radius:50%;width:17px;height:17px;font-size:10px;display:flex;align-items:center;justify-content:center}
+.n8n .dot{position:absolute;bottom:6px;left:8px;width:7px;height:7px;border-radius:50%;background:#35c26e}
+.drawflow-node .input,.drawflow-node .output{width:12px!important;height:12px!important;background:#fff!important;border:2px solid #8b8fa3!important}
+.drawflow-node .input:hover,.drawflow-node .output:hover{border-color:var(--acc)!important}
+#panel input,#panel textarea,#panel select{width:100%;background:#22222b;border:1px solid var(--line);color:#eee;border-radius:8px;padding:7px;margin-bottom:7px;box-sizing:border-box;font-size:13px}
+.kbd{background:#2a2a33;border-radius:5px;padding:0 6px;font-size:11px}
 </style>
 </head>
 <body>
 <header>
-<b>🔗 مصمم الوكيل البصري (مثل n8n — مجاني)</b>
-<span class="small" id="msg">اسحب من اليسار واربط بالنقر على النقاط</span>
+<button class="ghost" id="btnL" onclick="toggleL()" title="إخفاء/إظهار الإعدادات">☰</button>
+<b>🔗 المصمم البصري</b>
+<span class="small" id="msg">عجلة الفأرة + Ctrl للزوم • اسحب الخلفية للتحريك • <span class="kbd">Del</span> لحذف عقدة</span>
 <span style="flex:1"></span>
-<button class="ghost" onclick="location.href='/dashboard'">⬅ اللوحة</button>
-<button class="ghost" onclick="exactImage()">↺ نفس الصورة</button>
-<button onclick="save()">💾 حفظ وتشغيل</button>
+<button class="ghost" onclick="zoomOut()">−</button>
+<span id="zoomLbl">100%</span>
+<button class="ghost" onclick="zoomIn()">+</button>
+<button class="ghost" onclick="zoomFit()">⤢</button>
+<button class="ghost" onclick="exactImage()">↺ الصورة</button>
+<button class="ghost" onclick="toggleR()" title="إخفاء/إظهار القائمة">📋</button>
 <button onclick="testFlow()">⚡ جرّب</button>
+<button class="primary" onclick="save()">💾 حفظ</button>
 </header>
 <div id="wrap">
+<div id="panel">
+<b style="font-size:13px">⚙️ إعدادات العقدة</b>
+<div class="small">اضغط على أي عقدة</div>
+<div style="height:6px"></div>
+<label class="small">System Prompt</label>
+<textarea id="cfg_prompt" rows="6"></textarea>
+<label class="small">Model</label>
+<select id="cfg_model"><option>llama-3.3-70b-versatile</option><option>llama-3.1-8b-instant</option><option>mixtral-8x7b-32768</option></select>
+<label class="small">اسم المتجر</label>
+<input id="cfg_biz">
+<button onclick="applyCfg()" style="width:100%">تطبيق ✅</button>
+<div class="small" id="testOut" style="margin-top:8px;white-space:pre-wrap"></div>
+<div style="height:10px"></div>
+<div class="small">روابط Webhook:</div>
+<div class="small" id="hooks" style="direction:ltr;text-align:left"></div>
+</div>
+<div id="editor" ondragover="event.preventDefault()" ondrop="drop(event)"><div id="draw"></div></div>
 <div id="palette">
 <label class="small">➕ أضف عقدة</label>
 <select id="nodePick">
@@ -63,43 +101,10 @@ details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 <option value="TelegramSend">📤 Telegram Send</option>
 </select>
 <button onclick="addPicked()" style="width:100%">إضافة ➕</button>
-<div style="height:8px"></div>
-<details class="cat" open><summary>⚡ المشغلات</summary>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'ExecTrigger')"><span class="ico">↩️</span>Execute</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'ChatTrigger')"><span class="ico">💬</span>Chat msg</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramTrigger')"><span class="ico">📩</span>Telegram</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'FacebookTrigger')"><span class="ico">📘</span>Facebook</div>
-</details>
-<details class="cat"><summary>🤖 الذكاء</summary>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'AIAgent')"><span class="ico">🤖</span>Agent</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'AnthropicModel')"><span class="ico">AI</span>Anthropic</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'GroqModel')"><span class="ico">🧠</span>Groq</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Memory')"><span class="ico">💾</span>Memory</div>
-</details>
-<details class="cat"><summary>🛠️ الأدوات</summary>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Calculator')"><span class="ico">🔢</span>Calc</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Wikipedia')"><span class="ico">📚</span>Wiki</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'EditFields')"><span class="ico">✏️</span>Edit</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'WhatsAppSend')"><span class="ico">💬</span>WhatsApp</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'GoogleSheets')"><span class="ico">📊</span>Sheets</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'GmailSend')"><span class="ico">📧</span>Gmail</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'HttpRequest')"><span class="ico">🌐</span>HTTP</div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramSend')"><span class="ico">📤</span>Send</div>
-</details>
-</div>
-<div id="editor" ondragover="event.preventDefault()" ondrop="drop(event)"><div id="draw"></div></div>
-<div id="panel">
-<b>⚙️ إعدادات العقدة</b>
-<div class="small">اضغط على أي عقدة لتعديلها</div>
-<div style="height:8px"></div>
-<label class="small">System Prompt (شخصية الوكيل)</label>
-<textarea id="cfg_prompt" rows="6"></textarea>
-<label class="small">Model</label>
-<select id="cfg_model"><option>llama-3.3-70b-versatile</option><option>llama-3.1-8b-instant</option><option>mixtral-8x7b-32768</option></select>
-<label class="small">اسم المتجر</label>
-<input id="cfg_biz">
-<button onclick="applyCfg()">تطبيق على العقدة ✅</button>
-<div class="small" id="testOut" style="margin-top:10px;white-space:pre-wrap"></div>
+<div style="height:6px"></div>
+<details class="cat" open><summary>المشغلات</summary><div id="catTrig"></div></details>
+<details class="cat" open><summary>الذكاء</summary><div id="catAI"></div></details>
+<details class="cat" open><summary>الأدوات</summary><div id="catTools"></div></details>
 </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.js"></script>
@@ -107,104 +112,77 @@ details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 const el = document.getElementById('draw');
 const editor = new Drawflow(el);
 editor.reroute = true;
+editor.zoom_max = 1.8; editor.zoom_min = 0.25; editor.zoom_value = 0.08;
 editor.start();
+// بناء القوائم بأيقونات صغيرة ملونة
+const CATS = {
+  catTrig:[['ExecTrigger','↩️','Execute','#e85d4d'],['ChatTrigger','💬','Chat msg','#6b7280'],['TelegramTrigger','📩','Telegram','#229ED9'],['FacebookTrigger','📘','Facebook','#1877F2']],
+  catAI:[['AIAgent','🤖','Agent','#ea4b71'],['AnthropicModel','AI','Anthropic','#d97757'],['GroqModel','🧠','Groq','#22c55e'],['Memory','💾','Memory','#6b7280']],
+  catTools:[['Calculator','🔢','Calc','#6b7280'],['Wikipedia','📚','Wiki','#6b7280'],['EditFields','✏️','Edit','#8b5cf6'],['WhatsAppSend','💬','WhatsApp','#25D366'],['GoogleSheets','📊','Sheets','#22c55e'],['GmailSend','📧','Gmail','#e85d4d'],['HttpRequest','🌐','HTTP','#6b7280'],['TelegramSend','📤','Send','#229ED9']]
+};
+for(const [cid,items] of Object.entries(CATS)){
+  document.getElementById(cid).innerHTML = items.map(([t,i,l,c])=>
+    `<div class="node-btn" draggable="true" ondragstart="drag(event,'${t}')"><span class="ico" style="background:${c}">${i}</span>${l}</div>`).join('');
+}
 let dragType = null;
 function drag(ev, t){ dragType = t; }
-function addPicked(){
-  const t = document.getElementById('nodePick').value;
-  const rect = el.getBoundingClientRect();
-  addNode(t, 200 + Math.random()*200, 120 + Math.random()*160);
-}
+function addPicked(){ addNode(document.getElementById('nodePick').value, 220+Math.random()*220, 130+Math.random()*140); }
 el.parentElement.addEventListener('drop', drop);
-function drop(ev){
-  ev.preventDefault();
-  if(!dragType) return;
-  const rect = el.getBoundingClientRect();
-  const x = (ev.clientX - rect.left), y = (ev.clientY - rect.top);
-  addNode(dragType, x, y);
-  dragType = null;
-}
+function drop(ev){ ev.preventDefault(); if(!dragType) return;
+  const r = el.getBoundingClientRect();
+  addNode(dragType, ev.clientX-r.left, ev.clientY-r.top); dragType = null; }
+const ICON = {ExecTrigger:['↩️','#e85d4d',1],ChatTrigger:['💬','#4b5563',1],TelegramTrigger:['📩','#229ED9',1],FacebookTrigger:['📘','#1877F2',1],AIAgent:['🤖','#2a2a33',0],AnthropicModel:['AI','#d97757',0],GroqModel:['🧠','#14532d',0],Memory:['💾','#374151',0],Calculator:['🔢','#374151',0],Wikipedia:['📚','#374151',0],EditFields:['✏️','#5b21b6',0],WhatsAppSend:['💬','#128C7E',0],GoogleSheets:['📊','#166534',0],GmailSend:['📧','#b91c1c',0],HttpRequest:['🌐','#374151',0],TelegramSend:['📤','#229ED9',0]};
+const SUB = {ExecTrigger:'Trigger',ChatTrigger:'When chat message|received',AIAgent:'AI Agent|Conversational Agent',AnthropicModel:'Anthropic|Chat Model',EditFields:'Edit Fields|manual'};
 function addNode(type, x, y){
-  const defs = {
-    ExecTrigger:{t:'↩️ Execute Workflow',b:'Trigger',ins:0,outs:1},
-    ChatTrigger:{t:'💬 When chat message',b:'received',ins:0,outs:1},
-    TelegramTrigger:{t:'📩 Telegram Trigger',b:'عند وصول رسالة',ins:0,outs:1},
-    FacebookTrigger:{t:'📘 Facebook Trigger',b:'رسائل + تعليقات',ins:0,outs:1},
-    AIAgent:{t:'🤖 AI Agent',b:'Conversational Agent<br><span class="small">Chat Model • Memory • Tool</span>',ins:2,outs:1},
-    AnthropicModel:{t:'AI',b:'Anthropic Chat Model',ins:0,outs:1},
-    WhatsAppSend:{t:'💬 WhatsApp Send',b:'إرسال واتساب',ins:1,outs:1},
-    GoogleSheets:{t:'📊 Google Sheets',b:'حفظ الطلب',ins:1,outs:1},
-    GmailSend:{t:'📧 Gmail Send',b:'إيميل تنبيه',ins:1,outs:1},
-    HttpRequest:{t:'🌐 HTTP Request',b:'API خارجي',ins:1,outs:1},
-    GroqModel:{t:'🧠 Groq Model',b:'llama-3.3-70b (مجاني)',ins:0,outs:1},
-    Memory:{t:'💾 Memory',b:'ذاكرة 10 رسائل',ins:0,outs:1},
-    Calculator:{t:'🔢 Calculator',b:'أداة حساب',ins:0,outs:1},
-    Wikipedia:{t:'📚 Wikipedia',b:'أداة بحث',ins:0,outs:1},
-    EditFields:{t:'✏️ Edit Fields',b:'manual',ins:1,outs:1},
-    TelegramSend:{t:'📤 Telegram Send',b:'إرسال الرد',ins:1,outs:0},
-  };
-  const d = defs[type]||defs.AIAgent;
-  return editor.addNode(type, d.ins, d.outs, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, `<div class="title">${d.t}</div><div class="body">${d.b}</div>`);
+  const ins = (type==='AIAgent')?2:((type==='TelegramSend')?1:((/Trigger/.test(type)||/Model|Memory|Calculator|Wikipedia/.test(type))?(type==='AIAgent'?2:0):1));
+  const outs = (/Send|EditFields|Sheets|Gmail|HttpRequest/.test(type)&&type!=='EditFields')?1:(type==='TelegramSend'?0:1);
+  const o = (type==='TelegramSend')?0:1;
+  const i = (type==='AIAgent')?3:(/Trigger$/.test(type)||/Model$/.test(type)||type==='Memory'||type==='Calculator'||type==='Wikipedia'?0:1);
+  const [ic,bg,trig] = ICON[type]||['⬢','#374151',0];
+  const nm = document.getElementById('nodePick').selectedOptions ? type : type;
+  const label = (SUB[type]||type).split('|');
+  const html = `<div class="n8n"><div class="ic" style="background:${bg}">${ic}</div><div class="lb">${label[0]}${label[1]?`<span>${label[1]}</span>`:''}</div>${trig?'<div class="trig">⚡</div>':''}<div class="dot"></div></div>`;
+  return editor.addNode(type, i, o, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, html);
 }
 let selId = null;
-editor.on('nodeSelected', id=>{ selId=id; const n=editor.getNodeFromId(id); document.getElementById('cfg_prompt').value=n.data.prompt||''; document.getElementById('cfg_model').value=n.data.model||'llama-3.3-70b-versatile'; });
-function applyCfg(){
-  if(!selId) return alert('اضغط على عقدة AI Agent أولا');
+editor.on('nodeSelected', id=>{ selId=id; try{ const n=editor.getNodeFromId(id); document.getElementById('cfg_prompt').value=n.data.prompt||''; document.getElementById('cfg_model').value=n.data.model||'llama-3.3-70b-versatile'; }catch(e){} });
+document.addEventListener('keydown', e=>{ if((e.key==='Delete'||e.key==='Backspace')&&selId&&document.activeElement.tagName!=='TEXTAREA'&&document.activeElement.tagName!=='INPUT'){ editor.removeNodeId('node-'+selId); selId=null; } });
+function applyCfg(){ if(!selId) return alert('اضغط على عقدة AI Agent أولا');
   const n=editor.getNodeFromId(selId);
-  n.data.prompt=document.getElementById('cfg_prompt').value;
-  n.data.model=document.getElementById('cfg_model').value;
-  n.data.biz=document.getElementById('cfg_biz').value;
-  editor.updateNodeDataFromId(selId,n.data);
-  document.getElementById('msg').textContent='✅ تحفظ في العقدة';
-}
-// قالب مطابق لصورتك تماما: Trigger + Chat + AI Agent + Model + Edit Fields
-function defaultFlow(){
-  try{
-    const home = editor.drawflow && editor.drawflow.drawflow && editor.drawflow.drawflow.Home;
-    if(home && Object.keys(home.data||{}).length) return;
-  }catch(e){}
-  exactImage();
-}
-function exactImage(){
-  try{ editor.clear(); }catch(e){}
-  // نفس ترتيب الصورة
-  const idExec = addNode('ExecTrigger', 60, 90);
-  const idChat = addNode('ChatTrigger', 170, 210);
-  const idAI = addNode('AIAgent', 420, 90);
-  const idModel = addNode('AnthropicModel', 500, 300);
-  const idEdit = addNode('EditFields', 780, 90);
-  try{
-    editor.addConnection(idExec, idAI, 'output_1', 'input_1');
-    editor.addConnection(idChat, idAI, 'output_1', 'input_2');
-    editor.addConnection(idModel, idAI, 'output_1', 'input_1');
-    editor.addConnection(idAI, idEdit, 'output_1', 'input_1');
-    editor.zoom_refresh();
-  }catch(e){}
-}
-async function save(){
-  const data = editor.export();
-  // اجمع إعدادات AI Agent الأولى
-  const nodes = Object.values(data.drawflow.Home.data);
-  const ai = nodes.find(n=>n.name==='AIAgent');
-  const payload = {draw:data, prompt:(ai&&ai.data.prompt)||'', model:(ai&&ai.data.model)||'llama-3.3-70b-versatile', biz:document.getElementById('cfg_biz').value||''};
-  const r = await fetch('/api/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
-  document.getElementById('msg').textContent = r.ok ? '✅ تحفظ ويشتغل الآن' : '❌ خطأ: '+(r.error||'');
-}
-async function load(){
-  try{
-    const r = await fetch('/api/workflow').then(r=>r.json());
-    if(r && r.draw){ editor.import(r.draw); if(r.prompt) document.getElementById('cfg_prompt').value=r.prompt; if(r.model) document.getElementById('cfg_model').value=r.model; if(r.biz) document.getElementById('cfg_biz').value=r.biz; return; }
-  }catch(e){}
-  defaultFlow();
-}
-async function testFlow(){
-  const q = prompt('اكتب رسالة زبون للتجربة:','شحال السعر؟')||'شحال السعر؟';
-  const r = await fetch('/test?q='+encodeURIComponent(q)).then(r=>r.json());
-  document.getElementById('testOut').textContent = '🤖 '+r.reply;
-}
+  n.data.prompt=document.getElementById('cfg_prompt').value; n.data.model=document.getElementById('cfg_model').value; n.data.biz=document.getElementById('cfg_biz').value;
+  editor.updateNodeDataFromId(selId,n.data); msg('✅ تحفظ في العقدة'); }
+function msg(t){ document.getElementById('msg').textContent=t; }
+// زوم + إخفاء
+function updateZoom(){ try{ const m=editor.precanvas.style.transform.match(/scale\(([\d.]+)\)/); document.getElementById('zoomLbl').textContent=Math.round(parseFloat(m?m[1]:1)*100)+'%'; }catch(e){} }
+function zoomIn(){ editor.zoom_in(); updateZoom(); }
+function zoomOut(){ editor.zoom_out(); updateZoom(); }
+function zoomFit(){ editor.zoom_reset(); updateZoom(); }
+el.addEventListener('wheel', e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); e.deltaY<0?editor.zoom_in():editor.zoom_out(); updateZoom(); } }, {passive:false});
+function toggleL(){ document.getElementById('wrap').classList.toggle('hideL'); }
+function toggleR(){ document.getElementById('wrap').classList.toggle('hideR'); }
+// قالب مطابق للصورة
+function defaultFlow(){ try{ const h=editor.drawflow.drawflow.Home; if(h&&Object.keys(h.data||{}).length) return; }catch(e){} exactImage(); }
+function exactImage(){ try{ editor.clear(); }catch(e){}
+  const idExec=addNode('ExecTrigger',60,90), idChat=addNode('ChatTrigger',150,230),
+        idAI=addNode('AIAgent',430,95), idModel=addNode('AnthropicModel',495,320),
+        idEdit=addNode('EditFields',800,95);
+  try{ editor.addConnection(idExec,idAI,'output_1','input_1'); editor.addConnection(idChat,idAI,'output_1','input_2');
+       editor.addConnection(idModel,idAI,'output_1','input_3'); editor.addConnection(idAI,idEdit,'output_1','input_1');
+       editor.zoom_refresh(); updateZoom(); }catch(e){} }
+async function save(){ const data=editor.export();
+  const nodes=Object.values(data.drawflow.Home.data); const ai=nodes.find(n=>n.name==='AIAgent');
+  const payload={draw:data,prompt:(ai&&ai.data.prompt)||'',model:(ai&&ai.data.model)||'llama-3.3-70b-versatile',biz:document.getElementById('cfg_biz').value||''};
+  const r=await fetch('/api/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+  msg(r.ok?'✅ تحفظ ويشتغل الآن':'❌ خطأ'); }
+async function load(){ try{ const r=await fetch('/api/workflow').then(r=>r.json());
+  if(r&&r.draw){ editor.import(r.draw); if(r.prompt)document.getElementById('cfg_prompt').value=r.prompt; if(r.model)document.getElementById('cfg_model').value=r.model; if(r.biz)document.getElementById('cfg_biz').value=r.biz; updateZoom(); return; } }catch(e){} defaultFlow(); }
+async function testFlow(){ const q=prompt('رسالة زبون للتجربة:','شحال السعر؟')||'شحال السعر؟';
+  const r=await fetch('/test?q='+encodeURIComponent(q)).then(r=>r.json());
+  document.getElementById('testOut').textContent='🤖 '+r.reply; }
 load();
-setTimeout(()=>{ try{ const home=editor.drawflow.drawflow.Home; if(!Object.keys(home.data||{}).length) defaultFlow(); editor.zoom_refresh(); }catch(e){} }, 600);
-fetch('/api/knowledge').then(r=>r.json()).then(k=>{ if(k&&k.business_name) document.getElementById('cfg_biz').value=k.business_name; }).catch(()=>{});
+setTimeout(()=>{ try{ const h=editor.drawflow.drawflow.Home; if(!Object.keys(h.data||{}).length) defaultFlow(); updateZoom(); }catch(e){} },600);
+document.getElementById('hooks').textContent=location.origin+'/webhook/meta';
+fetch('/api/knowledge').then(r=>r.json()).then(k=>{ if(k&&k.business_name)document.getElementById('cfg_biz').value=k.business_name; }).catch(()=>{});
 </script>
 </body>
 </html>
