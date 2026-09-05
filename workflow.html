@@ -10,9 +10,13 @@ header{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#111
 header b{font-size:16px}button{background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
 button.ghost{background:#2a2e37}.small{font-size:12px;color:#999}
 #wrap{display:flex;height:calc(100vh - 52px)}
-#palette{width:210px;background:#111318;border-left:1px solid #333;padding:10px;overflow:auto}
-.node-btn{background:#22262f;border:1px solid #3a3f4d;border-radius:10px;padding:9px;margin-bottom:8px;cursor:grab;font-size:13px}
+#palette{width:150px;background:#111318;border-left:1px solid #333;padding:10px;overflow:auto}
+.node-btn{background:#22262f;border:1px solid #3a3f4d;border-radius:10px;padding:6px;margin-bottom:6px;cursor:grab;font-size:12px;text-align:center}
 .node-btn:hover{border-color:#7c3aed}
+.node-btn .ico{font-size:18px;display:block}
+#palette select{width:100%;background:#22262f;border:1px solid #3a3f4d;color:#eee;border-radius:8px;padding:8px;margin-bottom:8px}
+details.cat{margin-bottom:8px}
+details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 #editor{flex:1;position:relative;overflow:hidden;min-height:400px}
 #draw{width:100%;height:100%;min-height:calc(100vh - 52px)}
 .drawflow{background:#1a1d23!important;background-image:radial-gradient(#333 1px,transparent 1px)!important;background-size:22px 22px!important}
@@ -38,14 +42,33 @@ button.ghost{background:#2a2e37}.small{font-size:12px;color:#999}
 </header>
 <div id="wrap">
 <div id="palette">
-<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramTrigger')">📩 Telegram Trigger<br><span class="small">استقبال رسالة</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'FacebookTrigger')">📘 Facebook Trigger<br><span class="small">رسائل + تعليقات</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'AIAgent')">🤖 AI Agent<br><span class="small">الدماغ (Groq)</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'GroqModel')">🧠 Groq Model<br><span class="small">llama-3.3-70b</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Memory')">💾 Memory<br><span class="small">يتذكر المحادثة</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Calculator')">🔢 Calculator<br><span class="small">أداة حساب</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'Wikipedia')">📚 Wikipedia<br><span class="small">أداة بحث</span></div>
-<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramSend')">📤 Telegram Send<br><span class="small">إرسال الرد</span></div>
+<label class="small">➕ أضف عقدة</label>
+<select id="nodePick">
+<option value="TelegramTrigger">📩 Telegram Trigger</option>
+<option value="FacebookTrigger">📘 Facebook Trigger</option>
+<option value="AIAgent">🤖 AI Agent</option>
+<option value="GroqModel">🧠 Groq Model</option>
+<option value="Memory">💾 Memory</option>
+<option value="Calculator">🔢 Calculator</option>
+<option value="Wikipedia">📚 Wikipedia</option>
+<option value="TelegramSend">📤 Telegram Send</option>
+</select>
+<button onclick="addPicked()" style="width:100%">إضافة ➕</button>
+<div style="height:8px"></div>
+<details class="cat" open><summary>⚡ المشغلات</summary>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramTrigger')"><span class="ico">📩</span>Telegram</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'FacebookTrigger')"><span class="ico">📘</span>Facebook</div>
+</details>
+<details class="cat"><summary>🤖 الذكاء</summary>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'AIAgent')"><span class="ico">🤖</span>Agent</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'GroqModel')"><span class="ico">🧠</span>Groq</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Memory')"><span class="ico">💾</span>Memory</div>
+</details>
+<details class="cat"><summary>🛠️ الأدوات</summary>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Calculator')"><span class="ico">🔢</span>Calc</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'Wikipedia')"><span class="ico">📚</span>Wiki</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramSend')"><span class="ico">📤</span>Send</div>
+</details>
 </div>
 <div id="editor" ondragover="event.preventDefault()" ondrop="drop(event)"><div id="draw"></div></div>
 <div id="panel">
@@ -70,6 +93,11 @@ editor.reroute = true;
 editor.start();
 let dragType = null;
 function drag(ev, t){ dragType = t; }
+function addPicked(){
+  const t = document.getElementById('nodePick').value;
+  const rect = el.getBoundingClientRect();
+  addNode(t, 200 + Math.random()*200, 120 + Math.random()*160);
+}
 el.parentElement.addEventListener('drop', drop);
 function drop(ev){
   ev.preventDefault();
