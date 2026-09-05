@@ -215,3 +215,55 @@ async def set_workflow(req: Request):
         return {"ok": True}
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+# ---- أدوات حقيقية: طلبات + Google Sheets + واتساب ----
+import re
+from datetime import datetime
+ORDERS_PATH = Path(__file__).parent / "orders.json"
+SHEETS_WEBHOOK = os.getenv("GOOGLE_SHEETS_WEBHOOK", "")
+
+def extract_order(text: str) -> dict | None:
+    """يكشف رقم هاتف جزائري (05/06/07 + 10 أرقام) = نية طلب."""
+    m = re.search(r"(0\s?[567]\s?[\d\s]{8,})", text)
+    if not m:
+        return None
+    phone = re.sub(r"\s+", "", m.group(1))[:10]
+    return {"phone": phone, "text": text[:500], "date": datetime.now().isoformat(timespec="seconds")}
+
+def save_order(order: dict, platform: str, user_id: str):
+    order = {**order, "platform": platform, "user": str(user_id)}
+    try:
+        rows = json.loads(ORDERS_PATH.read_text(encoding="utf-8")) if ORDERS_PATH.exists() else []
+    except Exception:
+        rows = []
+    rows.append(order)
+    ORDERS_PATH.write_text(json.dumps(rows, ensure_ascii=False, indent=2)[-500000:], encoding="utf-8")
+    # دفع لـ Google Sheets عبر Apps Script (اختياري، مجاني)
+    if SHEETS_WEBHOOK:
+        try:
+            requests.post(SHEETS_WEBHOOK, json=order, timeout=10)
+        except Exception as e:
+            print("sheets forward failed:", e)
+    return order
+
+# غلّف chat الأصلية بحفظ تلقائي للطلبات
+_orig_chat = chat
+def chat(user_id: str, text: str, kind: str, platform: str) -> str:
+    reply = _orig_chat(user_id, text, kind, platform)
+    o = extract_order(text)
+    if o:
+        save_order(o, platform, user_id)
+        reply += "\n✅ تسجل طلبك، نأكدوه معاك قريبا."
+    return reply
+
+@app.get("/api/orders")
+def get_orders():
+    try:
+        return json.loads(ORDERS_PATH.read_text(encoding="utf-8")) if ORDERS_PATH.exists() else []
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/order")
+async def add_order(req: Request):
+    body = await req.json()
+    return {"ok": True, "order": save_order(body, body.get("platform", "manual"), body.get("user", "dashboard"))}

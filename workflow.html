@@ -37,6 +37,7 @@ details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 <span class="small" id="msg">اسحب من اليسار واربط بالنقر على النقاط</span>
 <span style="flex:1"></span>
 <button class="ghost" onclick="location.href='/dashboard'">⬅ اللوحة</button>
+<button class="ghost" onclick="exactImage()">↺ نفس الصورة</button>
 <button onclick="save()">💾 حفظ وتشغيل</button>
 <button onclick="testFlow()">⚡ جرّب</button>
 </header>
@@ -44,9 +45,17 @@ details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 <div id="palette">
 <label class="small">➕ أضف عقدة</label>
 <select id="nodePick">
+<option value="ExecTrigger">↩️ Execute Workflow Trigger</option>
+<option value="ChatTrigger">💬 When chat message received</option>
+<option value="AIAgent">🤖 AI Agent</option>
+<option value="AnthropicModel">AI Anthropic Chat Model</option>
+<option value="WhatsAppSend">💬 WhatsApp Send</option>
+<option value="GoogleSheets">📊 Google Sheets</option>
+<option value="GmailSend">📧 Gmail Send</option>
+<option value="HttpRequest">🌐 HTTP Request</option>
+<option value="EditFields">✏️ Edit Fields</option>
 <option value="TelegramTrigger">📩 Telegram Trigger</option>
 <option value="FacebookTrigger">📘 Facebook Trigger</option>
-<option value="AIAgent">🤖 AI Agent</option>
 <option value="GroqModel">🧠 Groq Model</option>
 <option value="Memory">💾 Memory</option>
 <option value="Calculator">🔢 Calculator</option>
@@ -56,17 +65,25 @@ details.cat summary{cursor:pointer;font-size:13px;color:#bbb;padding:4px}
 <button onclick="addPicked()" style="width:100%">إضافة ➕</button>
 <div style="height:8px"></div>
 <details class="cat" open><summary>⚡ المشغلات</summary>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'ExecTrigger')"><span class="ico">↩️</span>Execute</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'ChatTrigger')"><span class="ico">💬</span>Chat msg</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramTrigger')"><span class="ico">📩</span>Telegram</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'FacebookTrigger')"><span class="ico">📘</span>Facebook</div>
 </details>
 <details class="cat"><summary>🤖 الذكاء</summary>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'AIAgent')"><span class="ico">🤖</span>Agent</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'AnthropicModel')"><span class="ico">AI</span>Anthropic</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'GroqModel')"><span class="ico">🧠</span>Groq</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'Memory')"><span class="ico">💾</span>Memory</div>
 </details>
 <details class="cat"><summary>🛠️ الأدوات</summary>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'Calculator')"><span class="ico">🔢</span>Calc</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'Wikipedia')"><span class="ico">📚</span>Wiki</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'EditFields')"><span class="ico">✏️</span>Edit</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'WhatsAppSend')"><span class="ico">💬</span>WhatsApp</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'GoogleSheets')"><span class="ico">📊</span>Sheets</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'GmailSend')"><span class="ico">📧</span>Gmail</div>
+<div class="node-btn" draggable="true" ondragstart="drag(event,'HttpRequest')"><span class="ico">🌐</span>HTTP</div>
 <div class="node-btn" draggable="true" ondragstart="drag(event,'TelegramSend')"><span class="ico">📤</span>Send</div>
 </details>
 </div>
@@ -109,17 +126,25 @@ function drop(ev){
 }
 function addNode(type, x, y){
   const defs = {
+    ExecTrigger:{t:'↩️ Execute Workflow',b:'Trigger',ins:0,outs:1},
+    ChatTrigger:{t:'💬 When chat message',b:'received',ins:0,outs:1},
     TelegramTrigger:{t:'📩 Telegram Trigger',b:'عند وصول رسالة',ins:0,outs:1},
     FacebookTrigger:{t:'📘 Facebook Trigger',b:'رسائل + تعليقات',ins:0,outs:1},
-    AIAgent:{t:'🤖 AI Agent',b:'الدماغ — اضغط للإعداد',ins:1,outs:1},
-    GroqModel:{t:'🧠 Groq Model',b:'llama-3.3-70b',ins:0,outs:1},
+    AIAgent:{t:'🤖 AI Agent',b:'Conversational Agent<br><span class="small">Chat Model • Memory • Tool</span>',ins:2,outs:1},
+    AnthropicModel:{t:'AI',b:'Anthropic Chat Model',ins:0,outs:1},
+    WhatsAppSend:{t:'💬 WhatsApp Send',b:'إرسال واتساب',ins:1,outs:1},
+    GoogleSheets:{t:'📊 Google Sheets',b:'حفظ الطلب',ins:1,outs:1},
+    GmailSend:{t:'📧 Gmail Send',b:'إيميل تنبيه',ins:1,outs:1},
+    HttpRequest:{t:'🌐 HTTP Request',b:'API خارجي',ins:1,outs:1},
+    GroqModel:{t:'🧠 Groq Model',b:'llama-3.3-70b (مجاني)',ins:0,outs:1},
     Memory:{t:'💾 Memory',b:'ذاكرة 10 رسائل',ins:0,outs:1},
     Calculator:{t:'🔢 Calculator',b:'أداة حساب',ins:0,outs:1},
     Wikipedia:{t:'📚 Wikipedia',b:'أداة بحث',ins:0,outs:1},
+    EditFields:{t:'✏️ Edit Fields',b:'manual',ins:1,outs:1},
     TelegramSend:{t:'📤 Telegram Send',b:'إرسال الرد',ins:1,outs:0},
   };
   const d = defs[type]||defs.AIAgent;
-  editor.addNode(type, d.ins, d.outs, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, `<div class="title">${d.t}</div><div class="body">${d.b}</div>`);
+  return editor.addNode(type, d.ins, d.outs, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, `<div class="title">${d.t}</div><div class="body">${d.b}</div>`);
 }
 let selId = null;
 editor.on('nodeSelected', id=>{ selId=id; const n=editor.getNodeFromId(id); document.getElementById('cfg_prompt').value=n.data.prompt||''; document.getElementById('cfg_model').value=n.data.model||'llama-3.3-70b-versatile'; });
@@ -132,17 +157,29 @@ function applyCfg(){
   editor.updateNodeDataFromId(selId,n.data);
   document.getElementById('msg').textContent='✅ تحفظ في العقدة';
 }
-// قالب افتراضي مثل صورتك
+// قالب مطابق لصورتك تماما: Trigger + Chat + AI Agent + Model + Edit Fields
 function defaultFlow(){
   try{
     const home = editor.drawflow && editor.drawflow.drawflow && editor.drawflow.drawflow.Home;
     if(home && Object.keys(home.data||{}).length) return;
   }catch(e){}
-  addNode('TelegramTrigger',80,80); addNode('AIAgent',360,80);
-  addNode('GroqModel',120,320); addNode('Memory',360,320);
-  addNode('Calculator',600,320); addNode('Wikipedia',820,320);
-  addNode('TelegramSend',660,80);
-  try{ editor.zoom_refresh(); }catch(e){}
+  exactImage();
+}
+function exactImage(){
+  try{ editor.clear(); }catch(e){}
+  // نفس ترتيب الصورة
+  const idExec = addNode('ExecTrigger', 60, 90);
+  const idChat = addNode('ChatTrigger', 170, 210);
+  const idAI = addNode('AIAgent', 420, 90);
+  const idModel = addNode('AnthropicModel', 500, 300);
+  const idEdit = addNode('EditFields', 780, 90);
+  try{
+    editor.addConnection(idExec, idAI, 'output_1', 'input_1');
+    editor.addConnection(idChat, idAI, 'output_1', 'input_2');
+    editor.addConnection(idModel, idAI, 'output_1', 'input_1');
+    editor.addConnection(idAI, idEdit, 'output_1', 'input_1');
+    editor.zoom_refresh();
+  }catch(e){}
 }
 async function save(){
   const data = editor.export();
