@@ -31,7 +31,7 @@ body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;backg
 #draw{width:100%;height:100%}
 .drawflow{background:#fafafc!important;background-image:radial-gradient(#dcdce2 1.2px,transparent 1.2px)!important;background-size:24px 24px!important}
 .drawflow svg path.main-path{stroke:#a3a3ad!important;stroke-width:2!important;fill:none}
-.connection.input_3 .main-path,.connection.input_4 .main-path{stroke-dasharray:7 6!important}
+.connection.input_2 .main-path,.connection.input_3 .main-path,.connection.input_4 .main-path{stroke-dasharray:7 6!important}
 /* ===== n8n nodes (light) ===== */
 .drawflow-node{background:#fff!important;border:1px solid #e2e2e8!important;border-radius:12px!important;box-shadow:0 2px 8px rgba(20,20,40,.08)!important;padding:0!important;width:132px!important;color:#1a1a1e}
 .drawflow-node.selected{border-color:#ea4b71!important;box-shadow:0 0 0 2px #ea4b7133,0 2px 8px rgba(20,20,40,.1)!important}
@@ -48,11 +48,11 @@ body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;backg
 .n8n .plusrow div{flex:1;text-align:center}
 .n8n .plusrow button{width:20px;height:20px;border-radius:6px;border:1px solid #d5d5dc;background:#fff;color:#666;font-size:13px;line-height:1;cursor:pointer}
 .n8n .plusrow button:hover{border-color:#ea4b71;color:#ea4b71}
-.drawflow-node.AIAgent .inputs .input{top:auto!important}
-.drawflow-node.AIAgent .input_1{left:-8px!important;top:50%!important;margin-top:-8px}
-.drawflow-node.AIAgent .input_2{left:16%!important;bottom:-9px!important;margin-left:-8px}
-.drawflow-node.AIAgent .input_3{left:41%!important;bottom:-9px!important;margin-left:-8px;transform:rotate(45deg);border-radius:4px!important}
-.drawflow-node.AIAgent .input_4{left:66%!important;bottom:-9px!important;margin-left:-8px;transform:rotate(45deg);border-radius:4px!important}
+.drawflow-node.AIAgent .inputs .input{position:absolute!important;top:auto!important;pointer-events:all}
+.drawflow-node.AIAgent .input_1{left:-9px!important;top:50%!important;margin:-8px 0 0 0!important}
+.drawflow-node.AIAgent .input_2{left:17%!important;bottom:-10px!important;margin:0 0 0 -8px!important;transform:rotate(45deg);border-radius:4px!important}
+.drawflow-node.AIAgent .input_3{left:50%!important;bottom:-10px!important;margin:0 0 0 -8px!important;transform:rotate(45deg);border-radius:4px!important}
+.drawflow-node.AIAgent .input_4{left:83%!important;bottom:-10px!important;margin:0 0 0 -8px!important;transform:rotate(45deg);border-radius:4px!important}
 .drawflow-node .input,.drawflow-node .output{width:13px!important;height:13px!important;background:#fff!important;border:2px solid #b9b9c2!important}
 .drawflow-node .input:hover,.drawflow-node .output:hover{border-color:#ea4b71!important}
 /* circle model node */
@@ -203,7 +203,7 @@ function nodeHTML(type){
   const n = NODES[type];
   const parts = n.label.split('|');
   if(n.circle) return `<div class="n8n"><div class="ic">${n.icon}</div></div><div class="clabel" data-cl="${type}">${parts[0]}</div>`;
-  let h = `<div class="n8n">${n.trig?'<div class="trig">⚡</div>':''}<div class="ic" style="background:${n.color};${n.tcolor?`color:${n.tcolor};':''}">${n.icon}</div><div class="lb">${parts[0]}${parts[1]?`<span>${parts[1]}</span>`:''}</div>`;
+  let h = `<div class="n8n">${n.trig?'<div class="trig">⚡</div>':''}<div class="ic" style="background:${n.color};${n.tcolor?('color:'+n.tcolor+';'):''}">${n.icon}</div><div class="lb">${parts[0]}${parts[1]?`<span>${parts[1]}</span>`:''}</div>`;
   if(n.agent) h += `<div class="subs"><div class="req">Chat Model*</div><div>Memory</div><div>Tool</div></div><div class="plusrow"><div style="font-size:10px;color:#999">Model</div><div><button onclick="event.stopPropagation();addTool('Memory')">+</button></div><div><button onclick="event.stopPropagation();addTool('Calculator')">+</button></div></div>`;
   return h + `</div>`;
 }
@@ -220,7 +220,7 @@ function exactImage(){
   const idC=nodeIdByName('ChatTrigger'), idA=nodeIdByName('AIAgent'), idM=nodeIdByName('ModelCircle');
   try{
     if(idC&&idA) editor.addConnection(idC,idA,'output_1','input_1');
-    if(idM&&idA) editor.addConnection(idM,idA,'output_1','input_3');
+    if(idM&&idA) editor.addConnection(idM,idA,'output_1','input_2');
     editor.zoom_refresh(); updateZoom();
   }catch(e){}
   setModelLabel('Moonshot Kimi Chat Model','K');
@@ -230,7 +230,7 @@ function addTool(type){
   const idA = nodeIdByName('AIAgent'); let x=820,y=430;
   try{ const n = editor.getNodeFromId(idA); x=n.pos_x+30; y=n.pos_y+260; }catch(e){}
   const id = addNode(type,x,y);
-  try{ if(type==='Memory'&&idA) editor.addConnection(id,idA,'output_1','input_4'); }catch(e){}
+  try{ if(type==='Memory'&&idA) editor.addConnection(id,idA,'output_1','input_3'); }catch(e){}
 }
 /* ---------- picker ---------- */
 const PICK=[['ChatTrigger','Triggers'],['ExecTrigger','Triggers'],['TelegramTrigger','Triggers'],['FacebookTrigger','Triggers'],['AIAgent','AI'],['ModelCircle','AI'],['GroqModel','AI'],['Memory','AI'],['Calculator','Tools'],['Wikipedia','Tools'],['EditFields','Flow'],['WhatsAppSend','Apps'],['GoogleSheets','Apps'],['GmailSend','Apps'],['HttpRequest','Apps'],['TelegramSend','Apps']];
