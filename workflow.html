@@ -1,188 +1,367 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>مصمم الوكيل البصري 🔗 مثل n8n - مجاني</title>
+<title>My workflow - AI Agent</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.css">
 <style>
-:root{--bg:#101014;--panel:#17171c;--line:#2a2a33;--acc:#ea4b71}
-body{margin:0;font-family:Segoe UI,Tahoma;background:var(--bg);color:#eee;overflow:hidden}
-header{display:flex;gap:6px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);font-size:14px}
-header b{font-size:14px;white-space:nowrap}
-button{background:#3a3a46;color:#fff;border:1px solid #4a4a58;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
-button:hover{border-color:var(--acc)}
-button.primary{background:var(--acc);border-color:var(--acc)}
-button.ghost{background:transparent}
-.small{font-size:11px;color:#999}
-#zoomLbl{min-width:44px;text-align:center;font-size:12px;color:#bbb}
-#wrap{display:flex;height:calc(100vh - 47px)}
-#panel{width:230px;min-width:230px;background:var(--panel);border-left:1px solid var(--line);padding:10px;overflow:auto;transition:margin .2s}
-#palette{width:172px;min-width:172px;background:var(--panel);border-right:1px solid var(--line);padding:10px;overflow:auto;transition:margin .2s}
-#wrap.hideL #panel{margin-right:-250px}
-#wrap.hideR #palette{margin-left:-192px}
-#palette select{width:100%;background:#22222b;border:1px solid var(--line);color:#eee;border-radius:8px;padding:7px;margin-bottom:6px;font-size:12px}
-.node-btn{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 7px;margin-bottom:5px;cursor:grab;font-size:11.5px;color:#f2f2f5}
-.node-btn:hover{background:#1e1e25;border-color:#3a3a46}
-.node-btn .ico{width:26px;height:26px;min-width:26px;border:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
-details.cat{margin-bottom:6px}
-details.cat summary{cursor:pointer;font-size:12px;color:#bbb;padding:3px;list-style:none}
-details.cat summary::-webkit-details-marker{display:none}
-details.cat summary:before{content:'▾ '}
-#editor{flex:1;position:relative;overflow:hidden;min-width:0}
+html,body{height:100%}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fafafc;color:#1a1a1e;overflow:hidden;font-size:14px}
+/* ===== top bar ===== */
+.topbar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#fff;border-bottom:1px solid #e5e5ea}
+.pill{display:flex;align-items:center;gap:8px;font-size:12px;color:#666;border:1px solid #e5e5ea;border-radius:20px;padding:4px 12px;white-space:nowrap}
+.pill .dotg{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.upgrade{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.crumb{display:flex;align-items:center;gap:6px;font-size:13px;color:#555;margin-inline-start:8px}
+.crumb b{color:#111}
+.tabs{display:flex;background:#f1f1f4;border-radius:9px;padding:3px;margin:0 auto}
+.tabs button{border:0;background:transparent;padding:6px 16px;border-radius:7px;font-size:13px;color:#555;cursor:pointer}
+.tabs button.on{background:#fff;color:#111;box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.modebadge{font-size:11px;background:#dcfce7;color:#166534;border-radius:12px;padding:3px 10px;font-weight:600}
+.publish{background:#fff;border:1px solid #d5d5dc;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.publish:hover{border-color:#ea4b71;color:#ea4b71}
+/* ===== layout ===== */
+#wrap{display:flex;height:calc(100vh - 49px)}
+.rail{width:46px;min-width:46px;background:#fff;border-inline-end:1px solid #e5e5ea;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px}
+.rail button{width:32px;height:32px;border:0;background:transparent;border-radius:8px;font-size:16px;color:#555;cursor:pointer}
+.rail button:hover{background:#f1f1f4;color:#111}
+.rail .sp{flex:1}
+#main{flex:1;position:relative;min-width:0;display:flex;flex-direction:column}
+#canvasBox{flex:1;position:relative;overflow:hidden;min-height:0}
 #draw{width:100%;height:100%}
-.drawflow{background:var(--bg)!important;background-image:radial-gradient(#2e2e38 1.1px,transparent 1.1px)!important;background-size:24px 24px!important}
-.drawflow svg path{stroke:#8b8fa3!important;stroke-width:2!important}
-.drawflow-node{background:#1e1e25!important;color:#f2f2f5!important;border:1px solid #3a3a46!important;border-radius:10px!important;width:132px!important;padding:0!important;box-shadow:0 4px 14px rgba(0,0,0,.45)!important}
-.drawflow-node.selected{border-color:var(--acc)!important;box-shadow:0 0 0 2px #ea4b7155!important}
-.drawflow-node.AIAgent{width:196px!important}
-.n8n{position:relative;padding:10px 8px 8px;text-align:center;color:#f2f2f5}
-.n8n .ic{width:38px;height:38px;border:none;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;font-weight:bold}
-.n8n .lb{font-size:11.5px;font-weight:600;line-height:1.35;color:#f2f2f5}
-.n8n .lb span{display:block;font-weight:400;font-size:10.5px;color:#c9c9d4}
-.n8n .trig{position:absolute;top:-7px;right:-7px;background:#ff6d5a;border-radius:50%;width:17px;height:17px;font-size:10px;display:flex;align-items:center;justify-content:center}
-.n8n .dot{position:absolute;bottom:6px;left:8px;width:7px;height:7px;border-radius:50%;background:#35c26e}
-.drawflow-node .input,.drawflow-node .output{width:12px!important;height:12px!important;background:#fff!important;border:2px solid #8b8fa3!important}
-.drawflow-node .input:hover,.drawflow-node .output:hover{border-color:var(--acc)!important}
-#panel input,#panel textarea,#panel select{width:100%;background:#22222b;border:1px solid var(--line);color:#eee;border-radius:8px;padding:7px;margin-bottom:7px;box-sizing:border-box;font-size:13px}
-.kbd{background:#2a2a33;border-radius:5px;padding:0 6px;font-size:11px}
+.drawflow{background:#fafafc!important;background-image:radial-gradient(#dcdce2 1.2px,transparent 1.2px)!important;background-size:24px 24px!important}
+.drawflow svg path.main-path{stroke:#a3a3ad!important;stroke-width:2!important;fill:none}
+.connection.input_3 .main-path,.connection.input_4 .main-path{stroke-dasharray:7 6!important}
+/* ===== n8n nodes (light) ===== */
+.drawflow-node{background:#fff!important;border:1px solid #e2e2e8!important;border-radius:12px!important;box-shadow:0 2px 8px rgba(20,20,40,.08)!important;padding:0!important;width:132px!important;color:#1a1a1e}
+.drawflow-node.selected{border-color:#ea4b71!important;box-shadow:0 0 0 2px #ea4b7133,0 2px 8px rgba(20,20,40,.1)!important}
+.drawflow-node.AIAgent{width:210px!important;border-radius:14px!important}
+.n8n{position:relative;padding:12px 10px 10px;text-align:center;color:#1a1a1e}
+.n8n .ic{width:40px;height:40px;border-radius:10px;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff;font-weight:800}
+.n8n .lb{font-size:12px;font-weight:600;line-height:1.35}
+.n8n .lb span{display:block;font-weight:400;font-size:11px;color:#777}
+.n8n .trig{position:absolute;top:50%;left:-9px;transform:translateY(-50%);color:#ff6d5a;font-size:13px}
+.n8n .subs{display:flex;margin-top:10px;border-top:1px dashed #e5e5ea;padding-top:7px}
+.n8n .subs div{flex:1;font-size:10.5px;color:#666;font-weight:600}
+.n8n .subs div.req{color:#c81e1e}
+.n8n .plusrow{display:flex;margin-top:2px}
+.n8n .plusrow div{flex:1;text-align:center}
+.n8n .plusrow button{width:20px;height:20px;border-radius:6px;border:1px solid #d5d5dc;background:#fff;color:#666;font-size:13px;line-height:1;cursor:pointer}
+.n8n .plusrow button:hover{border-color:#ea4b71;color:#ea4b71}
+.drawflow-node.AIAgent .inputs .input{top:auto!important}
+.drawflow-node.AIAgent .input_1{left:-8px!important;top:50%!important;margin-top:-8px}
+.drawflow-node.AIAgent .input_2{left:16%!important;bottom:-9px!important;margin-left:-8px}
+.drawflow-node.AIAgent .input_3{left:41%!important;bottom:-9px!important;margin-left:-8px;transform:rotate(45deg);border-radius:4px!important}
+.drawflow-node.AIAgent .input_4{left:66%!important;bottom:-9px!important;margin-left:-8px;transform:rotate(45deg);border-radius:4px!important}
+.drawflow-node .input,.drawflow-node .output{width:13px!important;height:13px!important;background:#fff!important;border:2px solid #b9b9c2!important}
+.drawflow-node .input:hover,.drawflow-node .output:hover{border-color:#ea4b71!important}
+/* circle model node */
+.drawflow-node.ModelCircle{width:80px!important;height:80px!important;border-radius:50%!important}
+.drawflow-node.ModelCircle .n8n{padding:0;height:78px;display:flex;align-items:center;justify-content:center}
+.drawflow-node.ModelCircle .ic{width:44px;height:44px;margin:0;font-size:26px;background:#fff!important;color:#111!important}
+.clabel{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:max-content;max-width:190px;font-size:12px;font-weight:600;line-height:1.3;text-align:center}
+/* square trigger w/ label below */
+.drawflow-node.AutoLabel{width:96px!important}
+.drawflow-node.AutoLabel .n8n{padding:12px 6px 8px}
+/* ===== right toolbar ===== */
+.rtools{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.rtools button{width:34px;height:34px;background:#fff;border:1px solid #e2e2e8;border-radius:9px;font-size:15px;color:#444;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.rtools button:hover{color:#ea4b71;border-color:#ea4b71}
+.rtools button.ai{color:#8b5cf6;font-weight:800}
+/* ===== bottom-left zoom ===== */
+.zoombar{position:absolute;left:14px;bottom:14px;display:flex;gap:6px;z-index:5}
+.zoombar button{width:32px;height:32px;background:#fff;border:1px solid #e2e2e8;border-radius:8px;font-size:14px;color:#444;cursor:pointer}
+.zoombar button:hover{color:#ea4b71;border-color:#ea4b71}
+/* ===== open chat ===== */
+#openChat{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#ea580c;color:#fff;border:0;border-radius:9px;padding:10px 26px;font-size:14px;font-weight:600;cursor:pointer;z-index:5;box-shadow:0 4px 12px rgba(234,88,12,.35)}
+#openChat:hover{background:#c2410c}
+/* ===== bottom status bar ===== */
+.statusbar{display:flex;align-items:center;gap:14px;background:#fff;border-top:1px solid #e5e5ea;padding:6px 14px;font-size:12.5px;color:#555}
+.statusbar button.tab{background:transparent;border:0;font-size:12.5px;color:#555;cursor:pointer;padding:4px 8px;border-radius:6px}
+.statusbar button.tab.on{background:#f1f1f4;color:#111;font-weight:600}
+.statusbar .grow{flex:1}
+/* ===== drawers & views ===== */
+.drawer{position:absolute;top:0;right:0;width:300px;height:100%;background:#fff;border-left:1px solid #e5e5ea;box-shadow:-4px 0 16px rgba(0,0,0,.08);z-index:10;padding:14px;overflow:auto;display:none}
+.drawer.open{display:block}
+.drawer h3{margin:0 0 4px;font-size:15px}
+.drawer label{font-size:12px;color:#666;display:block;margin:10px 0 4px}
+.drawer input,.drawer textarea,.drawer select{width:100%;border:1px solid #d5d5dc;border-radius:8px;padding:8px;font-size:13px;box-sizing:border-box;font-family:inherit}
+.drawer .rowbtns{display:flex;gap:8px;margin-top:12px}
+.btn{border:1px solid #d5d5dc;background:#fff;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer}
+.btn.primary{background:#ea4b71;border-color:#ea4b71;color:#fff;font-weight:600}
+#logsPanel{position:absolute;left:0;right:0;bottom:33px;max-height:220px;background:#fff;border-top:1px solid #e5e5ea;z-index:9;display:none;overflow:auto;padding:10px 16px;font-size:12.5px}
+#logsPanel.open{display:block}
+.logrow{border-bottom:1px solid #f1f1f4;padding:6px 0}
+#chatDrawer .msgs{border:1px solid #eee;border-radius:10px;padding:10px;height:300px;overflow:auto;margin:10px 0;background:#fafafc}
+#chatDrawer .u{text-align:right;background:#e8f0fe;border-radius:10px;padding:7px 10px;margin:6px 0;font-size:13px}
+#chatDrawer .a{background:#fff;border:1px solid #eee;border-radius:10px;padding:7px 10px;margin:6px 0;font-size:13px}
+#viewExec,#viewEval{position:absolute;inset:0;background:#fafafc;z-index:6;display:none;overflow:auto;padding:22px}
+#viewExec.open,#viewEval.open{display:block}
+.card{background:#fff;border:1px solid #e5e5ea;border-radius:12px;padding:14px;margin-bottom:12px;max-width:760px}
+.mono{font-family:Consolas,monospace;font-size:12px;background:#f4f4f6;border-radius:6px;padding:2px 6px}
+#picker{position:absolute;top:14px;right:56px;width:230px;background:#fff;border:1px solid #e5e5ea;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:11;display:none;overflow:hidden}
+#picker.open{display:block}
+#picker input{width:100%;border:0;border-bottom:1px solid #eee;padding:10px;font-size:13px;box-sizing:border-box;outline:none}
+#picker .lst{max-height:300px;overflow:auto}
+#picker .it{display:flex;align-items:center;gap:9px;padding:8px 12px;font-size:13px;cursor:pointer}
+#picker .it:hover{background:#f6f6f8}
+#picker .it .ico{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
 </style>
 </head>
 <body>
-<header>
-<button class="ghost" id="btnL" onclick="toggleL()" title="إخفاء/إظهار الإعدادات">☰</button>
-<b>🔗 المصمم البصري</b>
-<span class="small" id="msg">عجلة الفأرة + Ctrl للزوم • اسحب الخلفية للتحريك • <span class="kbd">Del</span> لحذف عقدة</span>
-<span style="flex:1"></span>
-<button class="ghost" onclick="zoomOut()">−</button>
-<span id="zoomLbl">100%</span>
-<button class="ghost" onclick="zoomIn()">+</button>
-<button class="ghost" onclick="zoomFit()">⤢</button>
-<button class="ghost" onclick="exactImage()">↺ الصورة</button>
-<button class="ghost" onclick="toggleR()" title="إخفاء/إظهار القائمة">📋</button>
-<button onclick="testFlow()">⚡ جرّب</button>
-<button class="primary" onclick="save()">💾 حفظ</button>
-</header>
+<div class="topbar">
+  <span class="pill"><span class="dotg"></span> Free &nbsp;·&nbsp; <span id="execCount">0</span> Executions</span>
+  <span class="crumb">👤 Personal &nbsp;/&nbsp; <b id="wfName" contenteditable="true">My workflow</b></span>
+  <div class="tabs">
+    <button id="tabEditor" class="on" onclick="showView('editor')">Editor</button>
+    <button id="tabExec" onclick="showView('exec')">Executions</button>
+    <button id="tabEval" onclick="showView('eval')">Evaluations</button>
+  </div>
+  <span class="modebadge" id="modeBadge">…</span>
+  <button class="upgrade" onclick="alert('You are on the free self-hosted build — no upgrade needed 🎉')">Upgrade Now</button>
+  <button class="publish" onclick="save()">Publish ▾</button>
+</div>
 <div id="wrap">
-<div id="panel">
-<b style="font-size:13px">⚙️ إعدادات العقدة</b>
-<div class="small">اضغط على أي عقدة</div>
-<div style="height:6px"></div>
-<label class="small">System Prompt</label>
-<textarea id="cfg_prompt" rows="6"></textarea>
-<label class="small">Model</label>
-<select id="cfg_model"><option>llama-3.3-70b-versatile</option><option>llama-3.1-8b-instant</option><option>mixtral-8x7b-32768</option></select>
-<label class="small">اسم المتجر</label>
-<input id="cfg_biz">
-<button onclick="applyCfg()" style="width:100%">تطبيق ✅</button>
-<div class="small" id="testOut" style="margin-top:8px;white-space:pre-wrap"></div>
-<div style="height:10px"></div>
-<div class="small">روابط Webhook:</div>
-<div class="small" id="hooks" style="direction:ltr;text-align:left"></div>
-</div>
-<div id="editor" ondragover="event.preventDefault()" ondrop="drop(event)"><div id="draw"></div></div>
-<div id="palette">
-<label class="small">➕ أضف عقدة</label>
-<select id="nodePick">
-<option value="ExecTrigger">↩️ Execute Workflow Trigger</option>
-<option value="ChatTrigger">💬 When chat message received</option>
-<option value="AIAgent">🤖 AI Agent</option>
-<option value="AnthropicModel">AI Anthropic Chat Model</option>
-<option value="WhatsAppSend">💬 WhatsApp Send</option>
-<option value="GoogleSheets">📊 Google Sheets</option>
-<option value="GmailSend">📧 Gmail Send</option>
-<option value="HttpRequest">🌐 HTTP Request</option>
-<option value="EditFields">✏️ Edit Fields</option>
-<option value="TelegramTrigger">📩 Telegram Trigger</option>
-<option value="FacebookTrigger">📘 Facebook Trigger</option>
-<option value="GroqModel">🧠 Groq Model</option>
-<option value="Memory">💾 Memory</option>
-<option value="Calculator">🔢 Calculator</option>
-<option value="Wikipedia">📚 Wikipedia</option>
-<option value="TelegramSend">📤 Telegram Send</option>
-</select>
-<button onclick="addPicked()" style="width:100%">إضافة ➕</button>
-<div style="height:6px"></div>
-<details class="cat" open><summary>المشغلات</summary><div id="catTrig"></div></details>
-<details class="cat" open><summary>الذكاء</summary><div id="catAI"></div></details>
-<details class="cat" open><summary>الأدوات</summary><div id="catTools"></div></details>
-</div>
+  <div class="rail">
+    <button title="Add node" onclick="togglePicker()">＋</button>
+    <button title="Search" onclick="togglePicker()">🔍</button>
+    <button title="Executions" onclick="showView('exec')">📋</button>
+    <button title="Nodes" onclick="togglePicker()">🧩</button>
+    <div class="sp"></div>
+    <button title="Dashboard" onclick="location.href='/dashboard'">🏠</button>
+    <button title="About" onclick="alert('AI Reply Agent — free n8n-style builder')">👤</button>
+  </div>
+  <div id="main">
+    <div id="canvasBox">
+      <div id="draw"></div>
+      <div class="rtools">
+        <button title="Add node" onclick="togglePicker()">＋</button>
+        <button title="Zoom to fit" onclick="zoomFit()">🔍</button>
+        <button title="Duplicate selected" onclick="dupSel()">⧉</button>
+        <button title="Logs" onclick="toggleLogs()">▭</button>
+        <button class="ai" title="AI settings" onclick="openAISettings()">✨</button>
+      </div>
+      <div class="zoombar">
+        <button title="Fit" onclick="zoomFit()">⤢</button>
+        <button title="Zoom in" onclick="zoomIn()">＋</button>
+        <button title="Zoom out" onclick="zoomOut()">－</button>
+        <button title="Settings panel" onclick="toggleSettings()">🎚️</button>
+      </div>
+      <button id="openChat" onclick="toggleChat(true)">💬 Open chat</button>
+      <div id="picker"><input id="pickSearch" placeholder="Search nodes…" oninput="renderPicker()"><div class="lst" id="pickList"></div></div>
+      <div class="drawer" id="settingsDrawer">
+        <h3 id="ndTitle">Node</h3><div style="font-size:12px;color:#888" id="ndSub"></div>
+        <div id="ndBody"></div>
+        <div class="rowbtns"><button class="btn primary" onclick="applySettings()">Apply</button><button class="btn" onclick="toggleSettings(false)">Close</button></div>
+      </div>
+      <div class="drawer" id="chatDrawer">
+        <h3>💬 Chat</h3><div style="font-size:12px;color:#888">Test your agent live</div>
+        <div class="msgs" id="chatMsgs"></div>
+        <div style="display:flex;gap:6px"><input id="chatIn" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn primary" onclick="sendChat()">➤</button></div>
+      </div>
+      <div id="viewExec"><h2>Executions</h2><p style="color:#666;font-size:13px">Latest conversations &amp; captured orders.</p><div id="execList"></div></div>
+      <div id="viewEval"><h2>Evaluations</h2><p style="color:#666;font-size:13px">Run the built-in test set against your agent.</p><button class="btn primary" onclick="runEval()">▶ Run evaluation</button><div id="evalOut" style="margin-top:12px"></div></div>
+    </div>
+    <div id="logsPanel"></div>
+    <div class="statusbar">
+      <button class="tab on" onclick="toggleChat(true)">Chat</button>
+      <span>Session: <span class="mono" id="sessId">…</span> <a href="#" onclick="newSession();return false" style="color:#888">⟳</a></span>
+      <button class="tab" onclick="toggleLogs()">Logs</button>
+      <span class="grow"></span>
+      <span id="zoomLbl" style="color:#888">100%</span>
+      <button class="tab" onclick="clearLogs()">🗑 Clear execution</button>
+    </div>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/drawflow@0.0.60/dist/drawflow.min.js"></script>
 <script>
 const el = document.getElementById('draw');
 const editor = new Drawflow(el);
-editor.reroute = true;
+editor.reroute = true; editor.reroute_fix_curvature = true;
 editor.zoom_max = 1.8; editor.zoom_min = 0.25; editor.zoom_value = 0.08;
 editor.start();
-// بناء القوائم بأيقونات صغيرة ملونة
-const CATS = {
-  catTrig:[['ExecTrigger','↩️','Execute','#e85d4d'],['ChatTrigger','💬','Chat msg','#6b7280'],['TelegramTrigger','📩','Telegram','#229ED9'],['FacebookTrigger','📘','Facebook','#1877F2']],
-  catAI:[['AIAgent','🤖','Agent','#ea4b71'],['AnthropicModel','AI','Anthropic','#d97757'],['GroqModel','🧠','Groq','#22c55e'],['Memory','💾','Memory','#6b7280']],
-  catTools:[['Calculator','🔢','Calc','#6b7280'],['Wikipedia','📚','Wiki','#6b7280'],['EditFields','✏️','Edit','#8b5cf6'],['WhatsAppSend','💬','WhatsApp','#25D366'],['GoogleSheets','📊','Sheets','#22c55e'],['GmailSend','📧','Gmail','#e85d4d'],['HttpRequest','🌐','HTTP','#6b7280'],['TelegramSend','📤','Send','#229ED9']]
+/* ---------- node catalog ---------- */
+const NODES = {
+  ExecTrigger:{label:'Execute Workflow|Trigger',icon:'↩️',color:'#e85d4d',in:0,out:1},
+  ChatTrigger:{label:'When chat message|received',icon:'💬',color:'#3f3f46',in:0,out:1,trig:1,auto:1},
+  AIAgent:{label:'AI Agent',icon:'🤖',color:'#2b2b31',in:4,out:1,agent:1},
+  ModelCircle:{label:'Model',icon:'K',color:'#fff',in:0,out:1,circle:1,tcolor:'#111'},
+  EditFields:{label:'Edit Fields|manual',icon:'✏️',color:'#7c3aed',in:1,out:1,auto:1},
+  TelegramTrigger:{label:'Telegram Trigger',icon:'📩',color:'#229ED9',in:0,out:1},
+  FacebookTrigger:{label:'Facebook Trigger',icon:'📘',color:'#1877F2',in:0,out:1},
+  GroqModel:{label:'Groq Model',icon:'🧠',color:'#166534',in:0,out:1},
+  Memory:{label:'Memory',icon:'💾',color:'#52525b',in:0,out:1},
+  Calculator:{label:'Calculator',icon:'🔢',color:'#52525b',in:0,out:1},
+  Wikipedia:{label:'Wikipedia',icon:'📚',color:'#52525b',in:0,out:1},
+  WhatsAppSend:{label:'WhatsApp Send',icon:'💬',color:'#128C7E',in:1,out:1},
+  GoogleSheets:{label:'Google Sheets',icon:'📊',color:'#166534',in:1,out:1},
+  GmailSend:{label:'Gmail Send',icon:'📧',color:'#b91c1c',in:1,out:1},
+  HttpRequest:{label:'HTTP Request',icon:'🌐',color:'#52525b',in:1,out:1},
+  TelegramSend:{label:'Telegram Send',icon:'📤',color:'#229ED9',in:1,out:0}
 };
-for(const [cid,items] of Object.entries(CATS)){
-  document.getElementById(cid).innerHTML = items.map(([t,i,l,c])=>
-    `<div class="node-btn" draggable="true" ondragstart="drag(event,'${t}')"><span class="ico" style="background:${c}">${i}</span>${l}</div>`).join('');
+function nodeHTML(type){
+  const n = NODES[type];
+  const parts = n.label.split('|');
+  if(n.circle) return `<div class="n8n"><div class="ic">${n.icon}</div></div><div class="clabel" data-cl="${type}">${parts[0]}</div>`;
+  let h = `<div class="n8n">${n.trig?'<div class="trig">⚡</div>':''}<div class="ic" style="background:${n.color};${n.tcolor?`color:${n.tcolor};':''}">${n.icon}</div><div class="lb">${parts[0]}${parts[1]?`<span>${parts[1]}</span>`:''}</div>`;
+  if(n.agent) h += `<div class="subs"><div class="req">Chat Model*</div><div>Memory</div><div>Tool</div></div><div class="plusrow"><div style="font-size:10px;color:#999">Model</div><div><button onclick="event.stopPropagation();addTool('Memory')">+</button></div><div><button onclick="event.stopPropagation();addTool('Calculator')">+</button></div></div>`;
+  return h + `</div>`;
 }
-let dragType = null;
-function drag(ev, t){ dragType = t; }
-function addPicked(){ addNode(document.getElementById('nodePick').value, 220+Math.random()*220, 130+Math.random()*140); }
-el.parentElement.addEventListener('drop', drop);
-function drop(ev){ ev.preventDefault(); if(!dragType) return;
-  const r = el.getBoundingClientRect();
-  addNode(dragType, ev.clientX-r.left, ev.clientY-r.top); dragType = null; }
-const ICON = {ExecTrigger:['↩️','#e85d4d',1],ChatTrigger:['💬','#4b5563',1],TelegramTrigger:['📩','#229ED9',1],FacebookTrigger:['📘','#1877F2',1],AIAgent:['🤖','#2a2a33',0],AnthropicModel:['AI','#d97757',0],GroqModel:['🧠','#14532d',0],Memory:['💾','#374151',0],Calculator:['🔢','#374151',0],Wikipedia:['📚','#374151',0],EditFields:['✏️','#5b21b6',0],WhatsAppSend:['💬','#128C7E',0],GoogleSheets:['📊','#166534',0],GmailSend:['📧','#b91c1c',0],HttpRequest:['🌐','#374151',0],TelegramSend:['📤','#229ED9',0]};
-const SUB = {ExecTrigger:'Trigger',ChatTrigger:'When chat message|received',AIAgent:'AI Agent|Conversational Agent',AnthropicModel:'Anthropic|Chat Model',EditFields:'Edit Fields|manual'};
-function addNode(type, x, y){
-  const ins = (type==='AIAgent')?2:((type==='TelegramSend')?1:((/Trigger/.test(type)||/Model|Memory|Calculator|Wikipedia/.test(type))?(type==='AIAgent'?2:0):1));
-  const outs = (/Send|EditFields|Sheets|Gmail|HttpRequest/.test(type)&&type!=='EditFields')?1:(type==='TelegramSend'?0:1);
-  const o = (type==='TelegramSend')?0:1;
-  const i = (type==='AIAgent')?3:(/Trigger$/.test(type)||/Model$/.test(type)||type==='Memory'||type==='Calculator'||type==='Wikipedia'?0:1);
-  const [ic,bg,trig] = ICON[type]||['⬢','#374151',0];
-  const nm = document.getElementById('nodePick').selectedOptions ? type : type;
-  const label = (SUB[type]||type).split('|');
-  const html = `<div class="n8n"><div class="ic" style="background:${bg}">${ic}</div><div class="lb">${label[0]}${label[1]?`<span>${label[1]}</span>`:''}</div>${trig?'<div class="trig">⚡</div>':''}<div class="dot"></div></div>`;
-  return editor.addNode(type, i, o, x, y, type, {prompt:'',model:'llama-3.3-70b-versatile',biz:''}, html);
+function addNode(type,x,y,data){
+  const n = NODES[type]||NODES.AIAgent;
+  const cls = type + (n.circle?' ModelCircle':'') + ((type==='ChatTrigger'||type==='EditFields')?' AutoLabel':'');
+  return editor.addNode(type,n.in,n.out,x,y,cls,Object.assign({prompt:'',provider:'kimi',model:'kimi-k2-0711-preview',key:'',biz:'',fields:'{\n  \"reply\": \"={{ $json.output }}\"\n}'},data||{}),nodeHTML(type));
 }
-let selId = null;
-editor.on('nodeSelected', id=>{ selId=id; try{ const n=editor.getNodeFromId(id); document.getElementById('cfg_prompt').value=n.data.prompt||''; document.getElementById('cfg_model').value=n.data.model||'llama-3.3-70b-versatile'; }catch(e){} });
-document.addEventListener('keydown', e=>{ if((e.key==='Delete'||e.key==='Backspace')&&selId&&document.activeElement.tagName!=='TEXTAREA'&&document.activeElement.tagName!=='INPUT'){ editor.removeNodeId('node-'+selId); selId=null; } });
-function applyCfg(){ if(!selId) return alert('اضغط على عقدة AI Agent أولا');
-  const n=editor.getNodeFromId(selId);
-  n.data.prompt=document.getElementById('cfg_prompt').value; n.data.model=document.getElementById('cfg_model').value; n.data.biz=document.getElementById('cfg_biz').value;
-  editor.updateNodeDataFromId(selId,n.data); msg('✅ تحفظ في العقدة'); }
-function msg(t){ document.getElementById('msg').textContent=t; }
-// زوم + إخفاء
+function nodeIdByName(name){ try{ const a = editor.getNodesFromName(name); return a&&a.length?a[0]:null; }catch(e){ return null; } }
+/* ---------- exact screenshot layout ---------- */
+function exactImage(){
+  try{ editor.clear(); }catch(e){}
+  addNode('ChatTrigger',300,330); addNode('AIAgent',560,180); addNode('ModelCircle',630,430);
+  const idC=nodeIdByName('ChatTrigger'), idA=nodeIdByName('AIAgent'), idM=nodeIdByName('ModelCircle');
+  try{
+    if(idC&&idA) editor.addConnection(idC,idA,'output_1','input_1');
+    if(idM&&idA) editor.addConnection(idM,idA,'output_1','input_3');
+    editor.zoom_refresh(); updateZoom();
+  }catch(e){}
+  setModelLabel('Moonshot Kimi Chat Model','K');
+}
+function defaultFlow(){ try{ const h=editor.drawflow.drawflow.Home; if(h&&Object.keys(h.data||{}).length) return; }catch(e){} exactImage(); }
+function addTool(type){
+  const idA = nodeIdByName('AIAgent'); let x=820,y=430;
+  try{ const n = editor.getNodeFromId(idA); x=n.pos_x+30; y=n.pos_y+260; }catch(e){}
+  const id = addNode(type,x,y);
+  try{ if(type==='Memory'&&idA) editor.addConnection(id,idA,'output_1','input_4'); }catch(e){}
+}
+/* ---------- picker ---------- */
+const PICK=[['ChatTrigger','Triggers'],['ExecTrigger','Triggers'],['TelegramTrigger','Triggers'],['FacebookTrigger','Triggers'],['AIAgent','AI'],['ModelCircle','AI'],['GroqModel','AI'],['Memory','AI'],['Calculator','Tools'],['Wikipedia','Tools'],['EditFields','Flow'],['WhatsAppSend','Apps'],['GoogleSheets','Apps'],['GmailSend','Apps'],['HttpRequest','Apps'],['TelegramSend','Apps']];
+function renderPicker(){
+  const q=(document.getElementById('pickSearch').value||'').toLowerCase();
+  document.getElementById('pickList').innerHTML=PICK.filter(([t])=>t.toLowerCase().includes(q)).map(([t])=>{
+    const n=NODES[t]; return `<div class="it" onclick="addNode('${t}',260+Math.random()*200,140+Math.random()*140);togglePicker(false)"><span class="ico" style="background:${n.color}">${n.icon}</span>${n.label.replace('|',' ')}</div>`;}).join('');
+}
+function togglePicker(force){ const p=document.getElementById('picker'); const show=force!==undefined?force:!p.classList.contains('open'); p.classList.toggle('open',show); if(show){renderPicker();document.getElementById('pickSearch').focus();} }
+/* ---------- selection + settings ---------- */
+let selId=null, selName=null;
+editor.on('nodeSelected',id=>{ selId=id; try{ const n=editor.getNodeFromId(id); selName=n.name; openSettings(n); }catch(e){} });
+editor.on('nodeUnselected',()=>{});
+document.addEventListener('keydown',e=>{ if((e.key==='Delete'||e.key==='Backspace')&&selId&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ editor.removeNodeId('node-'+selId); selId=null; toggleSettings(false); } });
+function toggleSettings(force){ const d=document.getElementById('settingsDrawer'); d.classList.toggle('open',force!==undefined?force:!d.classList.contains('open')); }
+function openAISettings(){ const id=nodeIdByName('AIAgent'); if(id){ try{ const n=editor.getNodeFromId(id); selId=id; selName='AIAgent'; openSettings(n); }catch(e){} } }
+function openSettings(n){
+  const d=n.data||{};
+  document.getElementById('ndTitle').textContent=(NODES[n.name]?NODES[n.name].label.replace('|',' '):n.name);
+  document.getElementById('ndSub').textContent='node: '+n.name;
+  let h='';
+  if(n.name==='AIAgent') h=`<label>System prompt</label><textarea id="f_prompt" rows="7">${esc(d.prompt||'')}</textarea><label>Shop name</label><input id="f_biz" value="${esc(d.biz||'')}">`;
+  else if(n.name==='ModelCircle') h=`<label>Provider</label><select id="f_provider"><option value="kimi">Moonshot Kimi</option><option value="groq">Groq (free)</option><option value="openai">OpenAI</option></select><label>Model</label><input id="f_model" value="${esc(d.model||'kimi-k2-0711-preview')}"><label>API key <span style="color:#999">(blank = server key)</span></label><input id="f_key" placeholder="sk- / gsk- / kimi-…" value="${esc(d.key||'')}">`;
+  else if(n.name==='EditFields') h=`<label>Fields (JSON)</label><textarea id="f_fields" rows="6">${esc(d.fields||'')}</textarea>`;
+  else h=`<p style="font-size:13px;color:#666">Trigger / app node. Configure credentials on the server (<span class="mono">.env</span>), then test with <b>Open chat</b>.</p>`;
+  document.getElementById('ndBody').innerHTML=h;
+  if(document.getElementById('f_provider')) document.getElementById('f_provider').value=d.provider||'kimi';
+  toggleSettings(true);
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function applySettings(){
+  if(selId==null) return;
+  try{
+    const n=editor.getNodeFromId(selId), v=id=>{const e=document.getElementById(id);return e?e.value:n.data[id.slice(2)]||'';};
+    n.data.prompt=v('f_prompt'); n.data.biz=v('f_biz'); n.data.fields=v('f_fields');
+    if(document.getElementById('f_provider')){
+      n.data.provider=v('f_provider'); n.data.model=v('f_model'); n.data.key=v('f_key');
+      const names={kimi:['Moonshot Kimi Chat Model','K'],groq:['Groq Chat Model','G'],openai:['OpenAI Chat Model','O']};
+      const [lbl,lg]=names[n.data.provider]||names.kimi; setModelLabel(lbl,lg);
+    }
+    editor.updateNodeDataFromId(selId,n.data); toast('Saved to node ✓');
+  }catch(e){}
+}
+function setModelLabel(lbl,lg){
+  document.querySelectorAll('[data-cl="ModelCircle"]').forEach(e=>e.textContent=lbl);
+  const id=nodeIdByName('ModelCircle');
+  if(id){ const dom=document.getElementById('node-'+id); if(dom){ const ic=dom.querySelector('.ic'); if(ic) ic.textContent=lg; } }
+}
+function dupSel(){ if(selId==null) return; try{ const n=editor.getNodeFromId(selId); addNode(n.name,n.pos_x+40,n.pos_y+40,Object.assign({},n.data)); }catch(e){} }
+/* ---------- zoom / views / drawers ---------- */
 function updateZoom(){ try{ const m=editor.precanvas.style.transform.match(/scale\(([\d.]+)\)/); document.getElementById('zoomLbl').textContent=Math.round(parseFloat(m?m[1]:1)*100)+'%'; }catch(e){} }
 function zoomIn(){ editor.zoom_in(); updateZoom(); }
 function zoomOut(){ editor.zoom_out(); updateZoom(); }
 function zoomFit(){ editor.zoom_reset(); updateZoom(); }
-el.addEventListener('wheel', e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); e.deltaY<0?editor.zoom_in():editor.zoom_out(); updateZoom(); } }, {passive:false});
-function toggleL(){ document.getElementById('wrap').classList.toggle('hideL'); }
-function toggleR(){ document.getElementById('wrap').classList.toggle('hideR'); }
-// قالب مطابق للصورة
-function defaultFlow(){ try{ const h=editor.drawflow.drawflow.Home; if(h&&Object.keys(h.data||{}).length) return; }catch(e){} exactImage(); }
-function exactImage(){ try{ editor.clear(); }catch(e){}
-  const idExec=addNode('ExecTrigger',60,90), idChat=addNode('ChatTrigger',150,230),
-        idAI=addNode('AIAgent',430,95), idModel=addNode('AnthropicModel',495,320),
-        idEdit=addNode('EditFields',800,95);
-  try{ editor.addConnection(idExec,idAI,'output_1','input_1'); editor.addConnection(idChat,idAI,'output_1','input_2');
-       editor.addConnection(idModel,idAI,'output_1','input_3'); editor.addConnection(idAI,idEdit,'output_1','input_1');
-       editor.zoom_refresh(); updateZoom(); }catch(e){} }
-async function save(){ const data=editor.export();
-  const nodes=Object.values(data.drawflow.Home.data); const ai=nodes.find(n=>n.name==='AIAgent');
-  const payload={draw:data,prompt:(ai&&ai.data.prompt)||'',model:(ai&&ai.data.model)||'llama-3.3-70b-versatile',biz:document.getElementById('cfg_biz').value||''};
+el.addEventListener('wheel',e=>{ if(e.ctrlKey||e.metaKey){ e.preventDefault(); e.deltaY<0?editor.zoom_in():editor.zoom_out(); updateZoom(); } },{passive:false});
+function showView(v){
+  ['editor','exec','eval'].forEach(k=>document.getElementById('tab'+k[0].toUpperCase()+k.slice(1)).classList.toggle('on',k===v));
+  document.getElementById('viewExec').classList.toggle('open',v==='exec');
+  document.getElementById('viewEval').classList.toggle('open',v==='eval');
+  if(v==='exec') loadExec();
+}
+function toggleLogs(force){ const p=document.getElementById('logsPanel'); p.classList.toggle('open',force!==undefined?force:!p.classList.contains('open')); if(p.classList.contains('open')) loadLogs(); }
+function clearLogs(){ document.getElementById('logsPanel').innerHTML='<div style="color:#888">Cleared.</div>'; }
+function toast(t){ const m=document.getElementById('zoomLbl'); m.textContent=t; setTimeout(updateZoom,1500); }
+/* ---------- save / load ---------- */
+async function save(){
+  const data=editor.export();
+  const nodes=Object.values(data.drawflow.Home.data);
+  const ai=nodes.find(n=>n.name==='AIAgent')||{data:{}};
+  const mc=nodes.find(n=>n.name==='ModelCircle');
+  const payload={draw:data,name:document.getElementById('wfName').textContent,prompt:ai.data.prompt||'',biz:ai.data.biz||'',
+    provider:(mc&&mc.data.provider)||'kimi',model:(mc&&mc.data.model)||'kimi-k2-0711-preview',api_key:(mc&&mc.data.key)||''};
   const r=await fetch('/api/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
-  msg(r.ok?'✅ تحفظ ويشتغل الآن':'❌ خطأ'); }
-async function load(){ try{ const r=await fetch('/api/workflow').then(r=>r.json());
-  if(r&&r.draw){ editor.import(r.draw); if(r.prompt)document.getElementById('cfg_prompt').value=r.prompt; if(r.model)document.getElementById('cfg_model').value=r.model; if(r.biz)document.getElementById('cfg_biz').value=r.biz; updateZoom(); return; } }catch(e){} defaultFlow(); }
-async function testFlow(){ const q=prompt('رسالة زبون للتجربة:','شحال السعر؟')||'شحال السعر؟';
-  const r=await fetch('/test?q='+encodeURIComponent(q)).then(r=>r.json());
-  document.getElementById('testOut').textContent='🤖 '+r.reply; }
-load();
-setTimeout(()=>{ try{ const h=editor.drawflow.drawflow.Home; if(!Object.keys(h.data||{}).length) defaultFlow(); updateZoom(); }catch(e){} },600);
-document.getElementById('hooks').textContent=location.origin+'/webhook/meta';
-fetch('/api/knowledge').then(r=>r.json()).then(k=>{ if(k&&k.business_name)document.getElementById('cfg_biz').value=k.business_name; }).catch(()=>{});
+  toast(r.ok?'✓ Published':'✗ Error');
+}
+async function load(){
+  try{
+    const r=await fetch('/api/workflow').then(r=>r.json());
+    if(r&&r.draw){ editor.import(r.draw);
+      if(r.name) document.getElementById('wfName').textContent=r.name;
+      const mc=(Object.values(r.draw.drawflow.Home.data).find(n=>n.name==='ModelCircle')||{data:{}}).data;
+      const names={kimi:['Moonshot Kimi Chat Model','K'],groq:['Groq Chat Model','G'],openai:['OpenAI Chat Model','O']};
+      const [lbl,lg]=names[mc.provider||r.provider||'kimi']||names.kimi; setModelLabel(lbl,lg);
+      updateZoom(); return;
+    }
+  }catch(e){}
+  defaultFlow();
+}
+/* ---------- chat / logs / exec / eval ---------- */
+function newSession(){ document.getElementById('sessId').textContent=Math.random().toString(16).slice(2,8)+'…'; document.getElementById('chatMsgs').innerHTML=''; }
+function toggleChat(force){ const d=document.getElementById('chatDrawer'); d.classList.toggle('open',force!==undefined?force:!d.classList.contains('open')); }
+async function sendChat(){
+  const inp=document.getElementById('chatIn'), q=inp.value.trim(); if(!q) return; inp.value='';
+  const box=document.getElementById('chatMsgs');
+  box.innerHTML+=`<div class="u">${esc(q)}</div>`; box.scrollTop=box.scrollHeight;
+  try{ const r=await fetch('/test?q='+encodeURIComponent(q)).then(r=>r.json());
+    box.innerHTML+=`<div class="a">🤖 ${esc(r.reply)}</div>`; logLine('chat',q+' → '+(r.mode||''));
+  }catch(e){ box.innerHTML+=`<div class="a">⚠ connection error</div>`; }
+  box.scrollTop=box.scrollHeight;
+}
+function logLine(a,b){ const p=document.getElementById('logsPanel'); if(!p.classList.contains('open'))return;
+  p.innerHTML=`<div class="logrow"><b>${esc(a)}</b> · ${esc(b)} · ${new Date().toLocaleTimeString()}</div>`+p.innerHTML; }
+async function loadLogs(){
+  try{ const h=await fetch('/api/history').then(r=>r.json());
+    const ks=Object.keys(h);
+    document.getElementById('logsPanel').innerHTML=ks.length?ks.slice(-8).map(k=>{const v=h[k];const l=v[v.length-1]||{};return `<div class="logrow"><b>${esc(k)}</b> · ${esc((l.content||'').slice(0,80))}</div>`;}).join(''):'<div style="color:#888">No executions yet — send a message first.</div>';
+  }catch(e){}
+}
+async function loadExec(){
+  try{
+    const [h,o]=await Promise.all([fetch('/api/history').then(r=>r.json()),fetch('/api/orders').then(r=>r.json()).catch(()=>[])]);
+    document.getElementById('execCount').textContent=Object.keys(h).length+(Array.isArray(o)?o.length:0);
+    let htm='<div class="card"><h3>Orders ('+(Array.isArray(o)?o.length:0)+')</h3>'+((Array.isArray(o)&&o.length)?o.slice(-10).reverse().map(x=>`<div class="logrow">📞 <b>${esc(x.phone||'?')}</b> · ${esc(x.platform||'')} · <span style="color:#888">${esc(x.date||'')}</span><br><span style="color:#555">${esc(x.text||'')}</span></div>`).join(''):'<p style="color:#888">No orders yet.</p>')+'</div>';
+    htm+='<div class="card"><h3>Conversations</h3>'+(Object.keys(h).map(k=>{const v=h[k];return `<div class="logrow"><b>${esc(k)}</b><br>${v.slice(-4).map(m=>(m.role==='user'?'👤 ':'🤖 ')+esc(m.content)).join('<br>')}</div>`;}).join('')||'<p style="color:#888">Empty.</p>')+'</div>';
+    document.getElementById('execList').innerHTML=htm;
+  }catch(e){}
+}
+async function runEval(){
+  const tests=['سلام شحال السعر؟','Prix svp ?','توصلو لوهران؟','حاب نطلب','I want a human'];
+  const box=document.getElementById('evalOut'); box.innerHTML='Running…';
+  let h='';
+  for(const t of tests){ try{ const r=await fetch('/test?q='+encodeURIComponent(t)).then(r=>r.json());
+    h+=`<div class="card">👤 ${esc(t)}<br>🤖 ${esc(r.reply)}<br><span class="mono">${esc(r.mode||'')}</span> ${String(r.mode).includes('ai')?'✅':'⚠'}</div>`; }catch(e){ h+=`<div class="card">❌ ${esc(t)}</div>`; } }
+  box.innerHTML=h;
+}
+/* ---------- init ---------- */
+document.getElementById('wfName').addEventListener('blur',save);
+document.getElementById('hooks')&&(document.getElementById('hooks').textContent=location.origin+'/webhook/meta');
+newSession(); load();
+setTimeout(()=>{ try{ const h=editor.drawflow.drawflow.Home; if(!Object.keys(h.data||{}).length) defaultFlow(); updateZoom(); }catch(e){} },700);
+fetch('/').then(r=>r.json()).then(r=>{ document.getElementById('modeBadge').textContent='mode: '+r.mode; }).catch(()=>{});
 </script>
 </body>
 </html>
