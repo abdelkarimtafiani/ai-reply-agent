@@ -34,10 +34,10 @@ body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;backg
 .connection.input_2 .main-path,.connection.input_3 .main-path,.connection.input_4 .main-path{stroke-dasharray:7 6!important}
 /* ===== n8n nodes (light) ===== */
 .drawflow-node{background:#fff!important;border:1px solid #e2e2e8!important;border-radius:12px!important;box-shadow:0 2px 8px rgba(20,20,40,.08)!important;padding:0!important;width:132px!important;color:#1a1a1e}
-.drawflow-node.selected{border-color:#ea4b71!important;box-shadow:0 0 0 2px #ea4b7133,0 2px 8px rgba(20,20,40,.1)!important}
+.drawflow-node.selected{border-color:#d9d9e0!important;box-shadow:0 0 0 3px rgba(234,75,113,.30),0 2px 8px rgba(20,20,40,.10)!important}
 .drawflow-node.AIAgent{width:210px!important;border-radius:14px!important}
 .n8n{position:relative;padding:12px 10px 10px;text-align:center;color:#1a1a1e}
-.n8n .ic{width:40px;height:40px;border-radius:10px;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-size:21px;color:#fff;font-weight:800}
+.n8n .ic{width:46px;height:46px;border-radius:11px;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-size:23px;color:#fff;font-weight:800}
 .n8n .lb{font-size:12px;font-weight:600;line-height:1.35}
 .n8n .lb span{display:block;font-weight:400;font-size:11px;color:#777}
 .n8n .trig{position:absolute;top:50%;left:-9px;transform:translateY(-50%);color:#ff6d5a;font-size:13px}
@@ -84,6 +84,7 @@ body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;backg
 .drawer{position:absolute;top:0;right:0;width:300px;height:100%;background:#fff;border-left:1px solid #e5e5ea;box-shadow:-4px 0 16px rgba(0,0,0,.08);z-index:10;padding:14px;overflow:auto;display:none}
 .drawer.open{display:block}
 .drawer h3{margin:0 0 4px;font-size:15px}
+.drawer .x{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:8px;padding:0;font-size:14px}
 .drawer label{font-size:12px;color:#666;display:block;margin:10px 0 4px}
 .drawer input,.drawer textarea,.drawer select{width:100%;border:1px solid #d5d5dc;border-radius:8px;padding:8px;font-size:13px;box-sizing:border-box;font-family:inherit}
 .drawer .rowbtns{display:flex;gap:8px;margin-top:12px}
@@ -150,11 +151,13 @@ body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;backg
       <button id="openChat" onclick="toggleChat(true)">💬 Open chat</button>
       <div id="picker"><input id="pickSearch" placeholder="Search nodes…" oninput="renderPicker()"><div class="lst" id="pickList"></div></div>
       <div class="drawer" id="settingsDrawer">
+        <button class="x btn" onclick="toggleSettings(false)">✕</button>
         <h3 id="ndTitle">Node</h3><div style="font-size:12px;color:#888" id="ndSub"></div>
         <div id="ndBody"></div>
         <div class="rowbtns"><button class="btn primary" onclick="applySettings()">Apply</button><button class="btn" onclick="toggleSettings(false)">Close</button></div>
       </div>
       <div class="drawer" id="chatDrawer">
+        <button class="x btn" onclick="toggleChat(false)">✕</button>
         <h3>💬 Chat</h3><div style="font-size:12px;color:#888">Test your agent live</div>
         <div class="msgs" id="chatMsgs"></div>
         <div style="display:flex;gap:6px"><input id="chatIn" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn primary" onclick="sendChat()">➤</button></div>
