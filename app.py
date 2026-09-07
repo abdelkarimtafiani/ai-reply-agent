@@ -12,7 +12,7 @@ from agent_core import generate_reply
 
 app = FastAPI(title="AI Reply Agent - كل المنصات")
 
-VERSION = "2026-09-07c"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
+VERSION = "2026-09-07d"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
 
 META_TOKEN = os.getenv("META_PAGE_TOKEN", "")
 VERIFY = os.getenv("META_VERIFY_TOKEN", "my_secret_verify_123")
@@ -120,6 +120,8 @@ async def receive_meta(req: Request):
     data = await req.json()
     results = []
     for entry in data.get("entry", []):
+        ch_fields = [c.get("field") for c in entry.get("changes", [])]
+        log("HOOK", f"object={data.get('object')} changes={ch_fields} n_msg={len(entry.get('messaging', []))}")
         # 1) تعليقات (changes) — كل صيغ feed
         for ch in entry.get("changes", []):
             f = ch.get("field", "")
@@ -148,7 +150,8 @@ async def receive_meta(req: Request):
                         except Exception as e:
                             log("PRIVATE", cid, f"EXC {e.__class__.__name__}")
                     results.append(item_out)
-        log("META done", f"handled={len(results)}")
+            else:
+                log("SKIP change", f"field={f} keys={sorted(v.keys())} verb={v.get('verb')} item={v.get('item')}")
         # 2) رسائل Messenger/Instagram
         for m in entry.get("messaging", []):
             sender = m.get("sender", {}).get("id", "")
@@ -159,6 +162,9 @@ async def receive_meta(req: Request):
                 sent = send_meta(sender, reply)
                 log("EVENT message", plat, sender, str(sent)[:200])
                 results.append({"type": plat, "id": sender, "sent": sent})
+            else:
+                log("SKIP message", f"sender={bool(sender)} has_text={bool(txt)} keys={sorted(m.keys())}")
+        log("META done", f"handled={len(results)}")
     return JSONResponse({"ok": True, "handled": results})
 
 # ---- WhatsApp ----
