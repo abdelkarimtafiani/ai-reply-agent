@@ -16,6 +16,11 @@ META_TOKEN = os.getenv("META_PAGE_TOKEN", "")
 VERIFY = os.getenv("META_VERIFY_TOKEN", "my_secret_verify_123")
 WA_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
 WA_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID", "")
+PAGE_ID = os.getenv("PAGE_ID", "1241009282437968")
+
+def log(*a):
+    """الصندوق الأسود: سطر واحد واضح في Render Logs."""
+    print("[AGENT]", *a, flush=True)
 
 # ذاكرة محادثات بسيطة (للإنتاج استعمل Redis/DB)
 HISTORY: dict[str, list] = {}
@@ -55,17 +60,44 @@ def send_whatsapp(to: str, text: str):
     return r.json()
 
 def reply_comment(object_id: str, text: str):
-    """الرد على تعليق فيسبوك/انستغرام."""
+    """الرد العام على تعليق فيسبوك/انستغرام + محاولة ثانية + تسجيل."""
     if not META_TOKEN:
-        print(f"[DRY-RUN COMMENT {object_id}]: {text}")
+        log("COMMENT", object_id, "DRY-RUN (no token)")
         return {"dry_run": True}
-    r = requests.post(
-        f"https://graph.facebook.com/v21.0/{object_id}/comments",
-        params={"access_token": META_TOKEN},
-        json={"message": text},
-        timeout=20,
-    )
-    return r.json()
+    last = None
+    for attempt in (1, 2):
+        try:
+            r = requests.post(
+                f"https://graph.facebook.com/v21.0/{object_id}/comments",
+                params={"access_token": META_TOKEN},
+                json={"message": text},
+                timeout=20,
+            )
+            last = r.json()
+        except Exception as e:
+            last = {"error": f"http:{e.__class__.__name__}"}
+        log("COMMENT", object_id, f"try{attempt}", str(last)[:300])
+        if isinstance(last, dict) and last.get("id"):
+            return last
+    return last or {"error": "unknown"}
+
+def send_private_reply(comment_id: str, text: str):
+    """رسالة خاصة تلقائية بعد التعليق العام (مرة واحدة لكل تعليق). فشلها لا يكسر العام."""
+    if not META_TOKEN:
+        log("PRIVATE", comment_id, "DRY-RUN (no token)")
+        return {"dry_run": True}
+    try:
+        r = requests.post(
+            f"https://graph.facebook.com/v21.0/{comment_id}/private_replies",
+            params={"access_token": META_TOKEN},
+            json={"message": text[:1900]},
+            timeout=20,
+        )
+        out = r.json()
+    except Exception as e:
+        out = {"error": f"http:{e.__class__.__name__}"}
+    log("PRIVATE", comment_id, str(out)[:300])
+    return out
 
 @app.get("/")
 def home():
@@ -84,16 +116,35 @@ async def receive_meta(req: Request):
     data = await req.json()
     results = []
     for entry in data.get("entry", []):
-        # 1) تعليقات (changes)
+        # 1) تعليقات (changes) — كل صيغ feed
         for ch in entry.get("changes", []):
             f = ch.get("field", "")
-            v = ch.get("value", {})
+            v = ch.get("value", {}) or {}
             if f in ("feed", "comments", "live_comments"):
+                verb = v.get("verb", "add")
+                item = v.get("item", "")
                 ctext = v.get("message") or v.get("text") or ""
-                cid = v.get("comment_id") or v.get("id")
+                cid = v.get("comment_id") or v.get("commentId") or v.get("id")
+                sender_id = str((v.get("from") or {}).get("id", ""))
+                log("EVENT comment", f"field={f} verb={verb} item={item} cid={cid} from={sender_id} len={len(ctext)}")
+                if verb != "add" or item not in ("", "comment", "reply"):
+                    continue
+                if sender_id and PAGE_ID and sender_id == str(PAGE_ID):
+                    log("EVENT comment", cid, "SKIP self-reply")
+                    continue
                 if ctext and cid:
                     reply = chat(cid, ctext, "comment", "fb-comment")
-                    results.append({"type": "comment", "id": cid, "sent": reply_comment(cid, reply)})
+                    sent = reply_comment(cid, reply)
+                    item_out = {"type": "comment", "id": cid, "sent": sent}
+                    # الخاص بعد العام — مستقل تماما (فشله لا يكسر العام)
+                    if isinstance(sent, dict) and sent.get("id"):
+                        try:
+                            priv = chat(cid, ctext, "message", "fb-private")
+                            item_out["private"] = send_private_reply(cid, priv)
+                        except Exception as e:
+                            log("PRIVATE", cid, f"EXC {e.__class__.__name__}")
+                    results.append(item_out)
+        log("META done", f"handled={len(results)}")
         # 2) رسائل Messenger/Instagram
         for m in entry.get("messaging", []):
             sender = m.get("sender", {}).get("id", "")
@@ -101,7 +152,9 @@ async def receive_meta(req: Request):
             if sender and txt:
                 plat = "instagram" if m.get("sender", {}).get("id") and "instagram" in str(data).lower() else "messenger"
                 reply = chat(sender, txt, "message", plat)
-                results.append({"type": plat, "id": sender, "sent": send_meta(sender, reply)})
+                sent = send_meta(sender, reply)
+                log("EVENT message", plat, sender, str(sent)[:200])
+                results.append({"type": plat, "id": sender, "sent": sent})
     return JSONResponse({"ok": True, "handled": results})
 
 # ---- WhatsApp ----
@@ -206,6 +259,11 @@ async def set_workflow(req: Request):
         WF_PATH.write_text(json.dumps(body, ensure_ascii=False)[:200000], encoding="utf-8")
         # طبّق الإعدادات فورا على الوكيل بدون إعادة نشر
         import agent_core as ac
+        bases = {"groq": "https://api.groq.com/openai/v1", "kimi": "https://api.moonshot.ai/v1", "openai": "https://api.openai.com/v1"}
+        if body.get("provider") in bases:
+            os.environ["OPENAI_BASE_URL"] = bases[body["provider"]]
+        if body.get("api_key"):
+            os.environ["OPENAI_API_KEY"] = body["api_key"]
         if body.get("model"):
             os.environ["OPENAI_MODEL"] = body["model"]
         if body.get("biz"):
