@@ -12,6 +12,8 @@ from agent_core import generate_reply
 
 app = FastAPI(title="AI Reply Agent - كل المنصات")
 
+VERSION = "2026-09-07c"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
+
 META_TOKEN = os.getenv("META_PAGE_TOKEN", "")
 VERIFY = os.getenv("META_VERIFY_TOKEN", "my_secret_verify_123")
 WA_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
@@ -21,6 +23,8 @@ PAGE_ID = os.getenv("PAGE_ID", "1241009282437968")
 def log(*a):
     """الصندوق الأسود: سطر واحد واضح في Render Logs."""
     print("[AGENT]", *a, flush=True)
+
+log("boot", VERSION, "token=" + ("SET" if META_TOKEN else "EMPTY"), "page=" + str(PAGE_ID))
 
 # ذاكرة محادثات بسيطة (للإنتاج استعمل Redis/DB)
 HISTORY: dict[str, list] = {}
@@ -101,7 +105,7 @@ def send_private_reply(comment_id: str, text: str):
 
 @app.get("/")
 def home():
-    return {"status": "AI Agent شغال ✅", "platforms": ["messenger", "instagram", "facebook-comments", "whatsapp", "tiktok"], "mode": "ai" if os.getenv("OPENAI_API_KEY") else "rule-تجريبي"}
+    return {"status": "AI Agent شغال ✅", "version": VERSION, "platforms": ["messenger", "instagram", "facebook-comments", "whatsapp", "tiktok"], "mode": "ai" if os.getenv("OPENAI_API_KEY") else "rule-تجريبي"}
 
 # ---- تحقق Webhook من Meta ----
 @app.get("/webhook/meta")
