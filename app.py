@@ -15,7 +15,7 @@ from agent_core import generate_reply
 
 app = FastAPI(title="AI Reply Agent - كل المنصات")
 
-VERSION = "2026-09-07e"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
+VERSION = "2026-09-07f"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
 
 META_TOKEN = os.getenv("META_PAGE_TOKEN", "")
 VERIFY = os.getenv("META_VERIFY_TOKEN", "my_secret_verify_123")
@@ -374,6 +374,14 @@ def gget(path: str, params: dict | None = None):
     )
     return r.json()
 
+def gerr(d: dict, where: str):
+    """سجل خطأ Graph بنصه (يكشف مشاكل الصلاحيات فورا)."""
+    if isinstance(d, dict) and d.get("error"):
+        e = d["error"]
+        log("POLL", f"ERR {where} code={e.get('code')} msg={str(e.get('message'))[:160]}")
+        return True
+    return False
+
 def _fresh(ts: str, cutoff: float) -> bool:
     """تعليق حديث؟ غير القابل للتحليل يعتبر حديثا (الحماية من التكرار تتكفل بالباقي)."""
     try:
@@ -401,22 +409,29 @@ def poll_comments_once() -> dict:
     out = {"posts": 0, "seen": 0, "replied": 0, "skipped": 0}
     if not META_TOKEN:
         return {"error": "no token"}
-    try:
-        posts = (gget(f"{PAGE_ID}/posts", {"fields": "id", "limit": "10"}).get("data") or [])
-    except Exception as e:
-        log("POLL", f"posts EXC {e.__class__.__name__}")
-        return {"error": "posts failed"}
-    out["posts"] = len(posts)
-    cutoff = datetime.now(timezone.utc).timestamp() - POLL_LOOKBACK_MIN * 60
-    for p in posts:
-        pid = p.get("id", "")
-        if not pid:
-            continue
+    # المنشورات من 3 مصادر (العادي + الخلاصة + الإعلانات المظلمة)
+    pids: list[str] = []
+    for src in ("posts", "feed", "ads_posts"):
         try:
-            comments = (gget(f"{pid}/comments", {
+            d = gget(f"{PAGE_ID}/{src}", {"fields": "id", "limit": "10"})
+            if gerr(d, src):
+                continue
+            for p in (d.get("data") or []):
+                if p.get("id") and p["id"] not in pids:
+                    pids.append(p["id"])
+        except Exception as e:
+            log("POLL", f"{src} EXC {e.__class__.__name__}")
+    out["posts"] = len(pids)
+    cutoff = datetime.now(timezone.utc).timestamp() - POLL_LOOKBACK_MIN * 60
+    for pid in pids[:15]:
+        try:
+            cmts = gget(f"{pid}/comments", {
                 "fields": "id,message,from,created_time",
                 "limit": "25", "order": "reverse_chronological",
-            }).get("data") or [])
+            })
+            if gerr(cmts, f"comments"):
+                continue
+            comments = (cmts.get("data") or [])
         except Exception:
             continue
         for cm in comments:
@@ -469,3 +484,32 @@ async def _startup_poll():
 def poll_now():
     """فحص يدوي فوري للتعليقات (افتح الرابط في المتصفح)."""
     return poll_comments_once()
+
+@app.get("/api/debug-comments")
+def debug_comments():
+    """كاشف: أين توجد التعليقات؟ (آمن: بلا مفاتيح)."""
+    info: dict = {"version": VERSION, "token": "SET" if META_TOKEN else "EMPTY",
+                  "page": str(PAGE_ID), "sources": {}}
+    if not META_TOKEN:
+        return info
+    for src in ("posts", "feed", "ads_posts"):
+        try:
+            d = gget(f"{PAGE_ID}/{src}", {"fields": "id,created_time,message", "limit": "10"})
+            if isinstance(d, dict) and d.get("error"):
+                info["sources"][src] = {"error": str(d["error"].get("message"))[:160]}
+                continue
+            items = []
+            for p in (d.get("data") or [])[:10]:
+                nc = 0
+                try:
+                    cd = gget(f"{p['id']}/comments", {"fields": "id", "limit": "1", "summary": "true"})
+                    s = (cd.get("summary") or {})
+                    nc = s.get("total_count", len(cd.get("data") or []))
+                except Exception:
+                    pass
+                items.append({"id": p.get("id"), "created": (p.get("created_time") or "")[:16],
+                              "n_comments": nc, "text": (p.get("message") or "")[:60]})
+            info["sources"][src] = {"n_posts": len(items), "posts": items}
+        except Exception as e:
+            info["sources"][src] = {"error": e.__class__.__name__}
+    return info
