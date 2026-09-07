@@ -1,6 +1,9 @@
 """سيرفر موحد: Facebook + Instagram + Messenger + WhatsApp + TikTok -> دماغ AI واحد."""
+import asyncio
 import os
+import re
 import json
+from datetime import datetime, timezone
 import requests
 from pathlib import Path
 from fastapi import FastAPI, Request, Query
@@ -12,7 +15,7 @@ from agent_core import generate_reply
 
 app = FastAPI(title="AI Reply Agent - كل المنصات")
 
-VERSION = "2026-09-07d"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
+VERSION = "2026-09-07e"  # بصمة الإصدار: تظهر في / وفي Logs عند كل إقلاع
 
 META_TOKEN = os.getenv("META_PAGE_TOKEN", "")
 VERIFY = os.getenv("META_VERIFY_TOKEN", "my_secret_verify_123")
@@ -138,12 +141,17 @@ async def receive_meta(req: Request):
                 if sender_id and PAGE_ID and sender_id == str(PAGE_ID):
                     log("EVENT comment", cid, "SKIP self-reply")
                     continue
+                if cid in REPLIED:
+                    log("EVENT comment", cid, "SKIP dup (already replied)")
+                    continue
                 if ctext and cid:
                     reply = chat(cid, ctext, "comment", "fb-comment")
                     sent = reply_comment(cid, reply)
                     item_out = {"type": "comment", "id": cid, "sent": sent}
                     # الخاص بعد العام — مستقل تماما (فشله لا يكسر العام)
                     if isinstance(sent, dict) and sent.get("id"):
+                        REPLIED.add(cid)
+                        _save_replied(REPLIED)
                         try:
                             priv = chat(cid, ctext, "message", "fb-private")
                             item_out["private"] = send_private_reply(cid, priv)
@@ -335,3 +343,129 @@ def get_orders():
 async def add_order(req: Request):
     body = await req.json()
     return {"ok": True, "order": save_order(body, body.get("platform", "manual"), body.get("user", "dashboard"))}
+
+# ---- مبدّل التعليقات الاحتياطي (polling): يجلب التعليقات بنفسه كل دقيقة ----
+# يعمل حتى لو Webhook لا يرسل أحداث feed. يستعمل نفس التوكن المثبت عمله.
+POLL_ENABLED = os.getenv("POLL_ENABLED", "1") == "1"
+POLL_INTERVAL = max(60, int(os.getenv("POLL_INTERVAL_SEC", "90")))
+POLL_LOOKBACK_MIN = int(os.getenv("POLL_LOOKBACK_MIN", "30"))
+REPLIED_PATH = Path(__file__).parent / "replied.json"
+
+def _load_replied() -> set:
+    try:
+        data = json.loads(REPLIED_PATH.read_text(encoding="utf-8"))
+        return set(data) if isinstance(data, list) else set()
+    except Exception:
+        return set()
+
+def _save_replied(ids: set):
+    try:
+        REPLIED_PATH.write_text(json.dumps(sorted(ids)[-2000:], ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        log("POLL", f"save failed {e.__class__.__name__}")
+
+REPLIED = _load_replied()
+
+def gget(path: str, params: dict | None = None):
+    r = requests.get(
+        f"https://graph.facebook.com/v21.0/{path}",
+        params={"access_token": META_TOKEN, **(params or {})},
+        timeout=20,
+    )
+    return r.json()
+
+def _fresh(ts: str, cutoff: float) -> bool:
+    """تعليق حديث؟ غير القابل للتحليل يعتبر حديثا (الحماية من التكرار تتكفل بالباقي)."""
+    try:
+        s = (ts or "").strip().replace("Z", "+00:00")
+        s = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", s)
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.timestamp() >= cutoff
+    except Exception:
+        return True
+
+def page_replied(cid: str) -> bool:
+    """هل ردت الصفحة فعلا على هذا التعليق؟ (منع التكرار حتى بعد restart)."""
+    try:
+        d = gget(f"{cid}/comments", {"fields": "from", "limit": "10"})
+        for c in (d.get("data") or []):
+            if str((c.get("from") or {}).get("id", "")) == str(PAGE_ID):
+                return True
+    except Exception as e:
+        log("POLL", cid, f"check EXC {e.__class__.__name__}")
+    return False
+
+def poll_comments_once() -> dict:
+    out = {"posts": 0, "seen": 0, "replied": 0, "skipped": 0}
+    if not META_TOKEN:
+        return {"error": "no token"}
+    try:
+        posts = (gget(f"{PAGE_ID}/posts", {"fields": "id", "limit": "10"}).get("data") or [])
+    except Exception as e:
+        log("POLL", f"posts EXC {e.__class__.__name__}")
+        return {"error": "posts failed"}
+    out["posts"] = len(posts)
+    cutoff = datetime.now(timezone.utc).timestamp() - POLL_LOOKBACK_MIN * 60
+    for p in posts:
+        pid = p.get("id", "")
+        if not pid:
+            continue
+        try:
+            comments = (gget(f"{pid}/comments", {
+                "fields": "id,message,from,created_time",
+                "limit": "25", "order": "reverse_chronological",
+            }).get("data") or [])
+        except Exception:
+            continue
+        for cm in comments:
+            cid = cm.get("id", "")
+            if not cid:
+                continue
+            out["seen"] += 1
+            if cid in REPLIED:
+                out["skipped"] += 1
+                continue
+            if str((cm.get("from") or {}).get("id", "")) == str(PAGE_ID):
+                REPLIED.add(cid); out["skipped"] += 1; continue
+            if not _fresh(cm.get("created_time", ""), cutoff):
+                REPLIED.add(cid); out["skipped"] += 1; continue
+            if page_replied(cid):
+                REPLIED.add(cid); out["skipped"] += 1; continue
+            text = (cm.get("message", "") or "").strip()
+            if not text:
+                REPLIED.add(cid); out["skipped"] += 1; continue
+            pub = chat(cid, text, "comment", "fb-poll")
+            sent = reply_comment(cid, pub)
+            if isinstance(sent, dict) and sent.get("id"):
+                try:
+                    priv = chat(cid, text, "message", "fb-poll-priv")
+                    send_private_reply(cid, priv)
+                except Exception as e:
+                    log("POLL", cid, f"priv EXC {e.__class__.__name__}")
+                out["replied"] += 1
+            else:
+                log("POLL", cid, f"public failed {str(sent)[:200]}")
+            REPLIED.add(cid)
+    _save_replied(REPLIED)
+    log("POLL", f"posts={out['posts']} seen={out['seen']} replied={out['replied']} skipped={out['skipped']}")
+    return out
+
+@app.on_event("startup")
+async def _startup_poll():
+    async def loop():
+        await asyncio.sleep(15)
+        while True:
+            if POLL_ENABLED and META_TOKEN:
+                try:
+                    await asyncio.to_thread(poll_comments_once)
+                except Exception as e:
+                    log("POLL", f"loop EXC {e.__class__.__name__}")
+            await asyncio.sleep(POLL_INTERVAL)
+    asyncio.create_task(loop())
+
+@app.get("/api/poll-now")
+def poll_now():
+    """فحص يدوي فوري للتعليقات (افتح الرابط في المتصفح)."""
+    return poll_comments_once()

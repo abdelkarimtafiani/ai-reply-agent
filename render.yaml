@@ -17,6 +17,12 @@ services:
         sync: false
       - key: PAGE_ID
         value: 1241009282437968
+      - key: POLL_ENABLED
+        value: 1
+      - key: POLL_INTERVAL_SEC
+        value: 90
+      - key: POLL_LOOKBACK_MIN
+        value: 30
       - key: WHATSAPP_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_ID

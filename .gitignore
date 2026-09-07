@@ -3,3 +3,6 @@ __pycache__/
 .env.txt
 *.pyc
 .venv/
+orders.json
+replied.json
+workflow.json
